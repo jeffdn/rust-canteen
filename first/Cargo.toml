@@ -1,0 +1,7 @@
+[package]
+name = "first"
+version = "0.0.1"
+authors = ["jeffdn@gmail.com"]
+
+[dependencies]
+postgres = "0.11.9"
