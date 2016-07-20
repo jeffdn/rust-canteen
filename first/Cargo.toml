@@ -4,4 +4,5 @@ version = "0.0.1"
 authors = ["jeffdn@gmail.com"]
 
 [dependencies]
-postgres = "0.11.9"
+postgres = { version = "0.11", features = ["chrono"] }
+chrono = "0.2"

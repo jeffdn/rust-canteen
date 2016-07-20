@@ -1,4 +1,5 @@
 extern crate postgres;
+extern crate chrono;
 
 use postgres::{Connection, SslMode, types};
 use std::io::{self, Read};
