@@ -161,6 +161,7 @@ fn main() {
 
     if args.len() == 1 {
         println!("{} {}", color_text("error:", Color::BoldRed), color_text("a DBURI is required!", Color::BoldWhite));
+        println!("{} cat file.sql | first [DBURI]", color_text("usage:", Color::BoldBlue));
         std::process::exit(1);
     }
 
