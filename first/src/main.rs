@@ -152,7 +152,7 @@ fn main() {
 
     io::stdin().read_to_string(&mut buf);
 
-    let conn = Connection::connect("postgres://jeff@localhost", SslMode::None).unwrap();
+    let conn = Connection::connect("postgres://jeff@localhost/feclink", SslMode::None).unwrap();
     let res = &conn.query(&mut buf, &[]).unwrap();
     let numcols = res.columns().len();
 
@@ -180,8 +180,7 @@ fn main() {
         coldata.push(colvals);
     }
 
-    print_row(&coltypes, &colwidths, &colnames);
-    print_header(&colwidths);
+    print_header(&colwidths, &colnames);
     for rowdata in coldata {
         print_row(&coltypes, &colwidths, &rowdata);
     }
