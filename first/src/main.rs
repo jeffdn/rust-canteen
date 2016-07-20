@@ -1,17 +1,22 @@
 extern crate postgres;
 extern crate chrono;
 
+#[cfg(test)]
+mod tests;
+
 use postgres::{Connection, SslMode, types};
 use std::io::{self, Read};
 
-enum Align {
+#[derive(PartialEq, Debug)]
+pub enum Align {
     Left,
     Right,
     Center,
 }
 
 #[allow(dead_code)]
-enum Color {
+#[derive(PartialEq, Debug)]
+pub enum Color {
     White,
     BoldWhite,
     BoldRed,
@@ -19,7 +24,7 @@ enum Color {
     BoldBlue,
 }
 
-fn color_text(text: &str, color: Color) -> String {
+pub fn color_text(text: &str, color: Color) -> String {
     let clrstr = match color {
         Color::White       => { format!("{}{}\x1B[33m\x1B[0m", "\x1B[33m\x1B[37m", text)        },
         Color::BoldWhite   => { format!("{}{}\x1B[33m\x1B[0m", "\x1B[33m\x1B[1m\x1B[33m\x1B[37m", text) },
@@ -75,18 +80,21 @@ fn parse_result(column: &postgres::rows::Row, coltype: &Vec<types::Type>, colpos
     val
 }
 
-fn get_alignment(coltype: &types::Type) -> Align {
+pub fn get_alignment(coltype: &types::Type) -> Align {
     match coltype {
-        &types::Type::Int2   => Align::Right,
-        &types::Type::Int4   => Align::Right,
-        &types::Type::Int8   => Align::Right,
-        &types::Type::Float4 => Align::Right,
-        &types::Type::Float8 => Align::Right,
-        _                    => Align::Left,
+        &types::Type::Int2          => Align::Right,
+        &types::Type::Int4          => Align::Right,
+        &types::Type::Int8          => Align::Right,
+        &types::Type::Float4        => Align::Right,
+        &types::Type::Float8        => Align::Right,
+        &types::Type::Date          => Align::Right,
+        &types::Type::Timestamp     => Align::Right,
+        &types::Type::TimestampTZ   => Align::Right,
+        _                           => Align::Left,
     }
 }
 
-fn pad_gen(len: usize, pad: &str) -> String {
+pub fn pad_gen(len: usize, pad: &str) -> String {
     let mut padstr = String::from("");
 
     for _ in 0..len {
@@ -96,7 +104,7 @@ fn pad_gen(len: usize, pad: &str) -> String {
     padstr
 }
 
-fn format_field(column: &str, width: usize, align: Align) -> String {
+pub fn format_field(column: &str, width: usize, align: Align) -> String {
     let padlen: usize = width - column.len();
     let extra: usize = padlen % 2;
 
