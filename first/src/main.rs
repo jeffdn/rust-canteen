@@ -7,6 +7,28 @@ use std::io::{self, Read};
 enum Align {
     Left,
     Right,
+    Center,
+}
+
+#[allow(dead_code)]
+enum Color {
+    White,
+    BoldWhite,
+    BoldRed,
+    BoldGreen,
+    BoldBlue,
+}
+
+fn color_text(text: &str, color: Color) -> String {
+    let clrstr = match color {
+        Color::White       => { format!("{}{}\x1B[33m\x1B[0m", "\x1B[33m\x1B[37m", text)        },
+        Color::BoldWhite   => { format!("{}{}\x1B[33m\x1B[0m", "\x1B[33m\x1B[1m\x1B[33m\x1B[37m", text) },
+        Color::BoldRed     => { format!("{}{}\x1B[33m\x1B[0m", "\x1B[33m\x1B[1m\x1B[33m\x1B[31m", text) },
+        Color::BoldGreen   => { format!("{}{}\x1B[33m\x1B[0m", "\x1B[33m\x1B[1m\x1B[33m\x1B[32m", text) },
+        Color::BoldBlue    => { format!("{}{}\x1B[33m\x1B[0m", "\x1B[33m\x1B[1m\x1B[33m\x1B[34m", text) },
+    };
+
+    clrstr
 }
 
 fn parse_result(column: &postgres::rows::Row, coltype: &Vec<types::Type>, colpos: usize) -> String {
