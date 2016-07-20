@@ -75,28 +75,35 @@ fn parse_result(column: &postgres::rows::Row, coltype: &Vec<types::Type>, colpos
     val
 }
 
-fn get_alignment(coltype: &Vec<types::Type>, colpos: usize) -> Align {
-    match coltype[colpos] {
-        types::Type::Int2   => Align::Right,
-        types::Type::Int4   => Align::Right,
-        types::Type::Int8   => Align::Right,
-        types::Type::Float4 => Align::Right,
-        types::Type::Float8 => Align::Right,
-        _                   => Align::Left,
+fn get_alignment(coltype: &types::Type) -> Align {
+    match coltype {
+        &types::Type::Int2   => Align::Right,
+        &types::Type::Int4   => Align::Right,
+        &types::Type::Int8   => Align::Right,
+        &types::Type::Float4 => Align::Right,
+        &types::Type::Float8 => Align::Right,
+        _                    => Align::Left,
     }
 }
 
-fn format_field(column: &str, width: usize, align: Align) -> String {
+fn pad_gen(len: usize, pad: &str) -> String {
     let mut padstr = String::from("");
-    let padlen: usize = width - column.len();
 
-    for _ in 0..padlen {
-        padstr = padstr + " ";
+    for _ in 0..len {
+        padstr = padstr + pad;
     }
 
+    padstr
+}
+
+fn format_field(column: &str, width: usize, align: Align) -> String {
+    let padlen: usize = width - column.len();
+    let extra: usize = padlen % 2;
+
     let ret: String = match align {
-        Align::Right => format!("{}{}", padstr, column),
-        Align::Left  => format!("{}{}", column, padstr),
+        Align::Center   => { format!("{}{}{}", pad_gen(padlen/2, " "), column, pad_gen((padlen/2)+extra, " ")) },
+        Align::Right    => { format!("{}{}", pad_gen(padlen, " "), column) },
+        Align::Left     => { format!("{}{}", column, pad_gen(padlen, " ")) },
     };
 
     ret
@@ -104,25 +111,33 @@ fn format_field(column: &str, width: usize, align: Align) -> String {
 
 fn print_row(coltypes: &Vec<types::Type>, colwidths: &Vec<usize>, rowdata: &Vec<String>) {
     for (i, col) in rowdata.iter().enumerate() {
-        let align = get_alignment(&coltypes, i);
-
         if i > 0 {
-            print!("|");
+            print!("{}", color_text("|", Color::BoldWhite));
         }
 
-        print!(" {} ", format_field(&col, colwidths[i], align));
+        print!(" {} ", format_field(&col, colwidths[i], get_alignment(&coltypes[i])));
     }
 
     println!("");
 }
 
-fn print_header(colwidths: &Vec<usize>) {
-    for (i, col) in colwidths.iter().enumerate() {
+fn print_header(colwidths: &Vec<usize>, colnames: &Vec<String>) {
+    for (i, name) in colnames.iter().enumerate() {
         if i > 0 {
-            print!("+");
+            print!("{}", color_text("|", Color::BoldWhite));
         }
 
-        print!("-{data:-<width$}-", data="-", width=col);
+        print!(" {} ", color_text(&format_field(&name, colwidths[i], Align::Center), Color::BoldWhite));
+    }
+
+
+    println!("");
+    for (i, col) in colwidths.iter().enumerate() {
+        if i > 0 {
+            print!("{}", color_text("|", Color::BoldWhite));
+        }
+
+        print!("{}", color_text(&pad_gen(col+2, "-"), Color::BoldWhite));
     }
 
     println!("");
