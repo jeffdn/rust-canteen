@@ -157,10 +157,17 @@ fn main() {
     let mut coldata: Vec<Vec<String>> = Vec::new();
     let mut colwidths: Vec<usize> = Vec::new();
     let mut coltypes: Vec<types::Type> = Vec::new();
+    let mut args = std::env::args();
 
+    if args.len() == 1 {
+        println!("{} {}", color_text("error:", Color::BoldRed), color_text("a DBURI is required!", Color::BoldWhite));
+        std::process::exit(1);
+    }
+
+    let connstr: String = args.nth(1).unwrap();
     io::stdin().read_to_string(&mut buf);
 
-    let conn = Connection::connect("postgres://jeff@localhost/feclink", SslMode::None).unwrap();
+    let conn = Connection::connect(&connstr as &str, SslMode::None).unwrap();
     let res = &conn.query(&mut buf, &[]).unwrap();
     let numcols = res.columns().len();
 
