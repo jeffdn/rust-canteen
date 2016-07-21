@@ -78,7 +78,7 @@ impl TableDesc {
             },
             types::Type::Timestamp => {
                 let tmpdate: chrono::NaiveDateTime = column.get(colpos);
-                tmpdate.format("%Y-%m-%d %H:%M:%s").to_string()
+                tmpdate.format("%Y-%m-%d %H:%M:%S").to_string()
             },
             types::Type::TimestampTZ => {
                 let tmpdate: chrono::DateTime<chrono::UTC> = column.get(colpos);
