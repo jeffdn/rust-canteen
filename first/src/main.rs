@@ -42,6 +42,14 @@ impl TableDesc {
         }
     }
 
+    fn register_column(&mut self, column: &postgres::stmt::Column) {
+        let colname = String::from(column.name());
+
+        self.widths.push(colname.len());
+        self.names.push(colname);
+        self.types.push(column.type_().clone());
+    }
+
     fn parse_result(&self, column: &postgres::rows::Row, colpos: usize) -> String {
         let val: String = match self.types[colpos] {
             types::Type::Text | types::Type::Varchar => column.get(colpos),
@@ -204,7 +212,6 @@ impl TableDesc {
     }
 }
 
-
 fn main() {
     let mut buf = String::new();
     let mut tdesc = TableDesc::new();
@@ -224,10 +231,7 @@ fn main() {
     let res = &conn.query(&mut buf, &[]).unwrap();
 
     for col in res.columns() {
-        let colname = String::from(col.name());
-        tdesc.widths.push(colname.len());
-        tdesc.names.push(colname);
-        tdesc.types.push(col.type_().clone());
+        tdesc.register_column(&col);
     }
 
     for row in res.iter() {
