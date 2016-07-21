@@ -136,7 +136,7 @@ fn print_row(coltypes: &Vec<types::Type>, colwidths: &Vec<usize>, rowdata: &Vec<
         true    => {
             for (i, col) in colwidths.iter().enumerate() {
                 if i > 0 {
-                    print!("{}", color_text("|", Color::BoldWhite));
+                    print!("{}", color_text("+", Color::BoldWhite));
                 }
 
                 print!("{}", color_text(&pad_gen(col+2, "-"), Color::BoldWhite));
