@@ -36,8 +36,8 @@ pub fn color_text(text: &str, color: Color) -> String {
     clrstr
 }
 
-fn parse_result(column: &postgres::rows::Row, coltype: &Vec<types::Type>, colpos: usize) -> String {
-    let val: String = match coltype[colpos] {
+fn parse_result(column: &postgres::rows::Row, colpos: usize, coltype: &types::Type) -> String {
+    let val: String = match *coltype {
         types::Type::Text | types::Type::Varchar => column.get(colpos),
         types::Type::Bool => {
             let tmpbool: bool = column.get(colpos);
@@ -117,38 +117,35 @@ pub fn format_field(column: &str, width: usize, align: Align) -> String {
     ret
 }
 
-fn print_row(coltypes: &Vec<types::Type>, colwidths: &Vec<usize>, rowdata: &Vec<String>) {
+fn print_row(coltypes: &Vec<types::Type>, colwidths: &Vec<usize>, rowdata: &Vec<String>, is_header: bool) {
     for (i, col) in rowdata.iter().enumerate() {
         if i > 0 {
             print!("{}", color_text("|", Color::BoldWhite));
         }
 
-        print!(" {} ", format_field(&col, colwidths[i], get_alignment(&coltypes[i])));
+        match is_header {
+            false   => print!(" {} ", format_field(&col, colwidths[i], get_alignment(&coltypes[i]))),
+            true    => print!(" {} ", color_text(&format_field(&col, colwidths[i], Align::Center), Color::BoldWhite)),
+        };
     }
 
     println!("");
-}
 
-fn print_header(colwidths: &Vec<usize>, colnames: &Vec<String>) {
-    for (i, name) in colnames.iter().enumerate() {
-        if i > 0 {
-            print!("{}", color_text("|", Color::BoldWhite));
-        }
+    match is_header {
+        false   => {},
+        true    => {
+            for (i, col) in colwidths.iter().enumerate() {
+                if i > 0 {
+                    print!("{}", color_text("|", Color::BoldWhite));
+                }
 
-        print!(" {} ", color_text(&format_field(&name, colwidths[i], Align::Center), Color::BoldWhite));
-    }
+                print!("{}", color_text(&pad_gen(col+2, "-"), Color::BoldWhite));
+            }
 
+            println!("");
+        },
+    };
 
-    println!("");
-    for (i, col) in colwidths.iter().enumerate() {
-        if i > 0 {
-            print!("{}", color_text("|", Color::BoldWhite));
-        }
-
-        print!("{}", color_text(&pad_gen(col+2, "-"), Color::BoldWhite));
-    }
-
-    println!("");
 }
 
 fn main() {
@@ -184,11 +181,15 @@ fn main() {
 
         for i in 0..numcols {
             let ret = row.get_bytes(i);
-            let col = if ret.is_some() { parse_result(&row, &coltypes, i) } else { String::from("") };
+            let col = match ret.is_some() {
+                true    => parse_result(&row, i, &coltypes[i]),
+                false   => String::from(""),
+            };
 
-            if colwidths[i] < col.len() {
-                colwidths[i] = col.len();
-            }
+            colwidths[i] = match col.len() > colwidths[i] {
+                true    => col.len(),
+                false   => colwidths[i]
+            };
 
             colvals.push(col);
         }
@@ -196,8 +197,8 @@ fn main() {
         coldata.push(colvals);
     }
 
-    print_header(&colwidths, &colnames);
+    print_row(&Vec::new(), &colwidths, &colnames, true);
     for rowdata in coldata {
-        print_row(&coltypes, &colwidths, &rowdata);
+        print_row(&coltypes, &colwidths, &rowdata, false);
     }
 }
