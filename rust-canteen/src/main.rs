@@ -55,6 +55,10 @@ impl Request {
             _               => Method::NoImpl,
         };
         self.path = String::from(ask[1]);
+        self.payload = match chunks.pop() {
+            Some(x) => String::from(x),
+            None    => String::new(),
+        };
 
         for line in header {
             let hdr: Vec<&str> = line.splitn(2, ": ").collect();
@@ -150,9 +154,6 @@ fn handle_client(mut stream: TcpStream) {
     while stream.read_to_string(&mut buf).unwrap() > 0 {
         rqstr.push_str(&buf);
     }
-
-    println!("{}", rqstr);
-    println!("");
 
     let req = Request::from_str(&rqstr);
 }
