@@ -4,11 +4,12 @@ extern crate regex;
 mod tests;
 
 use regex::Regex;
-use std::io::{self, Read};
+use std::io::Read;
 use std::collections::HashMap;
 use std::net::{TcpListener, TcpStream};
 use std::thread;
 
+#[allow(dead_code)]
 #[derive(PartialEq, Debug)]
 enum Method {
     Get,
@@ -23,6 +24,7 @@ struct Request {
     method:  Method,
     path:    String,
     headers: HashMap<String, String>,
+    params:  Option<HashMap<String, String>>,
     payload: String,
 }
 
@@ -32,6 +34,7 @@ impl Request {
             method:  Method::NoImpl,
             path:    String::new(),
             headers: HashMap::new(),
+            params:  None,
             payload: String::new(),
         }
     }
@@ -75,12 +78,13 @@ pub struct Route {
     pathdef: String,
     matcher: Regex,
     params:  HashMap<String, String>,
+    handler: Option<fn(Request) -> String>,
 }
 
 impl Route {
     fn new(path: &str) -> Route {
         let re = Regex::new(r"^<(?:(int|str):)?([\w_][a-zA-Z0-9_]*)>$").unwrap();
-        let mut parts: Vec<&str> = path.split('/').filter(|&s| s != "").collect();
+        let parts: Vec<&str> = path.split('/').filter(|&s| s != "").collect();
         let mut matcher: String = String::from(r"^");
         let mut params: HashMap<String, String> = HashMap::new();
 
@@ -123,6 +127,7 @@ impl Route {
             pathdef: String::from(path),
             matcher: Regex::new(&matcher).unwrap(),
             params:  params,
+            handler: None,
         }
     }
 
@@ -159,9 +164,6 @@ fn handle_client(mut stream: TcpStream) {
 }
 
 fn main() {
-    let rt = Route::new("/api/v1/foo/<foo_stuff>");
-    assert_eq!("blahblahblah", rt.parse("/api/v1/foo/blahblahblah").unwrap().get("foo_stuff").unwrap());
-    /*
     let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
 
     for stream in listener.incoming() {
@@ -171,10 +173,9 @@ fn main() {
                     handle_client(stream)
                 });
             },
-            Err(e)      => {},
+            Err(e)      => { println!("{}", e); },
         }
     }
 
     drop(listener);
-    */
 }
