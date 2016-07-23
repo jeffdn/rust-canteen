@@ -1,0 +1,7 @@
+[package]
+name = "canteen"
+version = "0.0.1"
+authors = ["jeffdn@gmail.com"]
+
+[dependencies]
+regex = "0.1"
