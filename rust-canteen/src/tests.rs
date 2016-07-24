@@ -1,6 +1,8 @@
 extern crate regex;
 
 use Route;
+use Method;
+use Request;
 use regex::Regex;
 
 #[test]
@@ -35,4 +37,30 @@ fn test_route_match_many() {
     assert_eq!("123", rm.get("foo_id").unwrap());
     assert_eq!("bar", rm.get("bar").unwrap());
     assert_eq!("456", rm.get("baz_id").unwrap());
+}
+
+#[test]
+fn test_find_route_match() {
+    let mut request = Request::new();
+    let routes: Vec<Route> = vec![Route::new("/api/v1/foo/<int:foo_id>"),
+                                  Route::new("/api/v1/foo/<int:foo_id>/bar/<int:bar_id>")];
+
+    request.method = Method::Get;
+    request.path = String::from("/api/v1/foo/42/bar/1234");
+
+    for route in routes {
+        match route.is_match(&request.path) {
+            false => continue,
+            true  => {
+                request.params = route.parse(&request.path);
+                break;
+            },
+        }
+    }
+
+    let foo_id: i32 = request.get("foo_id");
+    let bar_id: i32 = request.get("bar_id");
+
+    assert_eq!(42, foo_id);
+    assert_eq!(1234, bar_id);
 }

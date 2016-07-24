@@ -11,7 +11,7 @@ use std::thread;
 
 #[allow(dead_code)]
 #[derive(PartialEq, Debug)]
-enum Method {
+pub enum Method {
     Get,
     Put,
     Post,
@@ -19,8 +19,36 @@ enum Method {
     NoImpl,
 }
 
+#[derive(PartialEq, Eq, Hash, Debug)]
+pub enum ParamType {
+    Integer,
+    String,
+}
+
+#[derive(PartialEq, Eq, Hash, Debug)]
+pub struct Param {
+    ptype:   ParamType,
+    name:    String,
+}
+
+pub trait FromUri: Sized {
+    fn from_uri(data: &str) -> Self;
+}
+
+impl FromUri for String {
+    fn from_uri(data: &str) -> String {
+        String::from(data)
+    }
+}
+
+impl FromUri for i32 {
+    fn from_uri(data: &str) -> i32 {
+        data.parse::<i32>().unwrap()
+    }
+}
+
 #[derive(Debug)]
-struct Request {
+pub struct Request {
     method:  Method,
     path:    String,
     headers: HashMap<String, String>,
@@ -36,6 +64,22 @@ impl Request {
             headers: HashMap::new(),
             params:  None,
             payload: String::new(),
+        }
+    }
+
+    fn _get(&self, name: &str) -> Option<&String> {
+        let val: Option<&String> = match self.params {
+            Some(ref p) => p.get(name),
+            None        => None,
+        };
+
+        val
+    }
+
+    pub fn get<T>(&self, name: &str) -> T where T: FromUri {
+        match self._get(&name) {
+            Some(item) => FromUri::from_uri(&item),
+            None       => panic!("invalid route parameter {:?}", name),
         }
     }
 
@@ -71,13 +115,20 @@ impl Request {
             }
         }
     }
+
+    pub fn has_params(&self) -> bool {
+        match self.params {
+            Some(ref p) => true,
+            None        => false,
+        }
+    }
 }
 
 #[derive(Debug)]
 pub struct Route {
     pathdef: String,
     matcher: Regex,
-    params:  HashMap<String, String>,
+    params:  HashMap<String, ParamType>,
     handler: Option<fn(Request) -> String>,
 }
 
@@ -86,7 +137,7 @@ impl Route {
         let re = Regex::new(r"^<(?:(int|str):)?([\w_][a-zA-Z0-9_]*)>$").unwrap();
         let parts: Vec<&str> = path.split('/').filter(|&s| s != "").collect();
         let mut matcher: String = String::from(r"^");
-        let mut params: HashMap<String, String> = HashMap::new();
+        let mut params: HashMap<String, ParamType> = HashMap::new();
 
         for part in parts {
             let chunk: String = match re.is_match(part) {
@@ -94,15 +145,21 @@ impl Route {
                     let mut rc = String::new();
                     let caps = re.captures(part).unwrap();
                     let param = caps.at(2).unwrap().clone();
-                    let ptype: String = match caps.at(1) {
-                        Some(x)     => String::from(x),
-                        None        => String::from("str"),
+                    let ptype: ParamType = match caps.at(1) {
+                        Some(x)     => {
+                            match x.as_ref() {
+                                "str" => ParamType::String,
+                                "int" => ParamType::Integer,
+                                _     => ParamType::String,
+
+                            }
+                        }
+                        None        => ParamType::String,
                     };
 
-                    let mstr: String = match ptype.as_ref() {
-                        "str" => String::from("(?:[^/])+"),
-                        "int" => String::from("[0-9]+"),
-                        _     => String::from("(?:[^/])+"),
+                    let mstr: String = match ptype {
+                        ParamType::String  => String::from("(?:[^/])+"),
+                        ParamType::Integer => String::from("[0-9]+"),
                     };
 
                     rc.push_str("/(?P<");
@@ -110,7 +167,7 @@ impl Route {
                     rc.push_str(">");
                     rc.push_str(&mstr);
                     rc.push_str(")");
-                    params.insert(String::from(param), mstr.clone());
+                    params.insert(String::from(param), ptype);
 
                     rc
                 },
