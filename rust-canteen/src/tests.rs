@@ -40,7 +40,7 @@ fn test_route_match_many() {
 }
 
 #[test]
-fn test_find_route_match() {
+fn test_find_route_native_types() {
     let mut request = Request::new();
     let routes: Vec<Route> = vec![Route::new("/api/v1/foo/<int:foo_id>"),
                                   Route::new("/api/v1/foo/<int:foo_id>/bar/<int:bar_id>")];
