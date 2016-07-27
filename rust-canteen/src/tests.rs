@@ -1,7 +1,6 @@
-use Route;
-use Method;
-use Request;
-use FromUri;
+use route::*;
+use request::*;
+use response::*;
 
 #[test]
 fn test_fromuri_trait_i32() {
