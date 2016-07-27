@@ -4,9 +4,10 @@ extern crate regex;
 mod tests;
 
 use regex::Regex;
-use std::io::Read;
+use std::io::prelude::*;
+use std::io::{BufReader, BufWriter};
 use std::collections::HashMap;
-use std::net::{TcpListener, TcpStream};
+use std::net::{TcpListener, ToSocketAddrs, Shutdown};
 use std::thread;
 
 #[allow(dead_code)]
@@ -23,6 +24,7 @@ pub enum Method {
 pub enum ParamType {
     Integer,
     String,
+    Float,
 }
 
 #[derive(PartialEq, Eq, Hash, Debug)]
@@ -31,7 +33,7 @@ pub struct Param {
     name:    String,
 }
 
-pub trait FromUri: Sized {
+pub trait FromUri {
     fn from_uri(data: &str) -> Self;
 }
 
@@ -43,7 +45,19 @@ impl FromUri for String {
 
 impl FromUri for i32 {
     fn from_uri(data: &str) -> i32 {
-        data.parse::<i32>().unwrap()
+        match data.parse::<i32>() {
+            Ok(v)  => v,
+            Err(e) => panic!("matched integer can't be parsed: {:?}", e),
+        }
+    }
+}
+
+impl FromUri for f32 {
+    fn from_uri(data: &str) -> f32 {
+        match data.parse::<f32>() {
+            Ok(v)  => v,
+            Err(e) => panic!("matched float can't be parsed: {:?}", e),
+        }
     }
 }
 
@@ -53,7 +67,7 @@ pub struct Request {
     path:    String,
     headers: HashMap<String, String>,
     params:  Option<HashMap<String, String>>,
-    payload: String,
+    payload: Vec<u8>,
 }
 
 impl Request {
@@ -63,7 +77,7 @@ impl Request {
             path:    String::new(),
             headers: HashMap::new(),
             params:  None,
-            payload: String::new(),
+            payload: Vec::new(),
         }
     }
 
@@ -90,25 +104,35 @@ impl Request {
     }
 
     pub fn parse(&mut self, rqstr: &str) {
-        let mut chunks: Vec<&str> = rqstr.splitn(2, "\r\n\r\n").collect();
-        let mut header: Vec<&str> = chunks.pop().unwrap().split("\r\n").collect();
-        let ask: Vec<&str> = header.pop().unwrap().splitn(3, ' ').collect();
+        let mut buf: Vec<&str> = rqstr.splitn(2, "\r\n").collect();
+        let ask: Vec<&str> = buf[0].splitn(3, ' ').collect();
 
-        self.method = match ask[0] {
+        self.method = match ask[1] {
             "GET"           => Method::Get,
             "PUT" | "PATCH" => Method::Put,
             "POST"          => Method::Post,
             "DELETE"        => Method::Delete,
             _               => Method::NoImpl,
         };
-        self.path = String::from(ask[1]);
-        self.payload = match chunks.pop() {
-            Some(x) => String::from(x),
-            None    => String::new(),
-        };
+        self.path = String::from(ask[2]);
 
-        for line in header {
-            let hdr: Vec<&str> = line.splitn(2, ": ").collect();
+        loop {
+            buf = buf[1].splitn(2, "\r\n").collect();
+
+            if buf[0] == "" {
+                if buf[1] == "" {
+                    /* no payload */
+                    break;
+                }
+
+                let tmp: String;
+                buf = buf[1].splitn(2, "\r\n").collect();
+                tmp = String::from(buf[1]);
+                self.payload.extend(tmp.as_bytes());
+                break;
+            }
+
+            let hdr: Vec<&str> = buf[0].splitn(2, ": ").collect();
 
             if hdr.len() == 2 {
                 self.headers.insert(String::from(hdr[0]), String::from(hdr[1]));
@@ -124,16 +148,80 @@ impl Request {
     }
 }
 
+pub trait ToOutput {
+    fn to_output(&self) -> &[u8];
+}
+
+impl ToOutput for String {
+    fn to_output(&self) -> &[u8] {
+        self.as_bytes()
+    }
+}
+
+#[derive(Debug)]
+pub struct Response {
+    code:       i32,
+    ctype:      String,
+    headers:    HashMap<String, String>,
+    payload:    Vec<u8>,
+}
+
+impl Response {
+    fn new() -> Response {
+        Response {
+            code:       200,
+            ctype:      String::from("text/plain"),
+            headers:    HashMap::new(),
+            payload:    Vec::new(),
+        }
+    }
+
+    pub fn set_code(&mut self, code: i32) {
+        self.code = code;
+    }
+
+    pub fn set_content_type(&mut self, ctype: &str) {
+        self.ctype = String::from(ctype);
+    }
+
+    pub fn add_header(&mut self, key: &str, value: &str) {
+        self.headers.insert(String::from(key), String::from(value));
+    }
+
+    pub fn append<T: ToOutput>(&mut self, payload: T) {
+        self.payload.extend(payload.to_output().into_iter());
+    }
+
+    fn gen_output(&self) -> Vec<u8> {
+        let mut output: Vec<u8> = Vec::new();
+        let mut inter = String::new();
+
+        inter.push_str("HTTP/1.1 200 OK\r\n");
+        inter.push_str("Connection: close\r\n");
+        inter.push_str("Server: canteen/0.0.1\r\n");
+        inter.push_str(&format!("Content-Type: {}\r\n", self.ctype));
+        inter.push_str(&format!("Content-Length: {}\r\n", self.payload.len()));
+        inter.push_str("\r\n\r\n");
+
+        println!("{}", inter);
+
+        output.extend(inter.as_bytes());
+        output.extend(self.payload.iter());
+
+        output
+    }
+}
+
 #[derive(Debug)]
 pub struct Route {
     pathdef: String,
     matcher: Regex,
     params:  HashMap<String, ParamType>,
-    handler: Option<fn(Request) -> String>,
+    handler: fn(Request) -> Response,
 }
 
 impl Route {
-    fn new(path: &str) -> Route {
+    fn new(path: &str, handler: fn(Request) -> Response) -> Route {
         let re = Regex::new(r"^<(?:(int|str):)?([\w_][a-zA-Z0-9_]*)>$").unwrap();
         let parts: Vec<&str> = path.split('/').filter(|&s| s != "").collect();
         let mut matcher: String = String::from(r"^");
@@ -148,9 +236,10 @@ impl Route {
                     let ptype: ParamType = match caps.at(1) {
                         Some(x)     => {
                             match x.as_ref() {
-                                "str" => ParamType::String,
-                                "int" => ParamType::Integer,
-                                _     => ParamType::String,
+                                "string" | "str"    => ParamType::String,
+                                "integer" | "int"   => ParamType::Integer,
+                                "float"             => ParamType::Float,
+                                _                   => ParamType::String,
 
                             }
                         }
@@ -159,7 +248,8 @@ impl Route {
 
                     let mstr: String = match ptype {
                         ParamType::String  => String::from("(?:[^/])+"),
-                        ParamType::Integer => String::from("[0-9]+"),
+                        ParamType::Integer => String::from("-*[0-9]+"),
+                        ParamType::Float   => String::from("-*[0-9]*[.]?[0-9]+"),
                     };
 
                     rc.push_str("/(?P<");
@@ -184,7 +274,7 @@ impl Route {
             pathdef: String::from(path),
             matcher: Regex::new(&matcher).unwrap(),
             params:  params,
-            handler: None,
+            handler: handler,
         }
     }
 
@@ -207,32 +297,89 @@ impl Route {
             false => None,
         }
     }
-}
 
-fn handle_client(mut stream: TcpStream) {
-    let mut rqstr: String = String::new();
-    let mut buf: String = String::new();
+    fn _no_op(req: Request) -> Response {
+        let mut res = Response::new();
 
-    while stream.read_to_string(&mut buf).unwrap() > 0 {
-        rqstr.push_str(&buf);
+        res.append(String::from(req.path));
+
+        res
     }
-
-    let req = Request::from_str(&rqstr);
 }
 
-fn main() {
-    let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
+pub struct Canteen {
+    routes: HashMap<String, Route>,
+}
 
-    for stream in listener.incoming() {
-        match stream {
-            Ok(stream)  => {
-                thread::spawn(move || {
-                    handle_client(stream)
-                });
-            },
-            Err(e)      => { println!("{}", e); },
+
+impl Canteen {
+    fn new() -> Canteen {
+        Canteen {
+            routes: HashMap::new(),
         }
     }
 
-    drop(listener);
+    fn add_route(&mut self, path: &str, handler: fn(Request) -> Response) {
+        let pc = String::from(path);
+
+        if self.routes.contains_key(&pc) {
+            panic!("a route handler for {} has already been defined!", path);
+        }
+
+        self.routes.insert(String::from(path), Route::new(&path, handler));
+    }
+
+    fn run<A: ToSocketAddrs>(&self, addr: A) {
+        let listener = TcpListener::bind(addr).unwrap();
+
+        for stream in listener.incoming() {
+            match stream {
+                Ok(stream)  => {
+                    let mut rqstr = String::new();
+                    let mut buf = String::new();
+                    let mut reader = BufReader::new(stream);
+                    let mut handler: fn(Request) -> Response = Route::_no_op;
+
+                    while reader.read_to_string(&mut buf).unwrap() > 0 {
+                        rqstr.push_str(&buf);
+                    }
+
+                    println!("{}", rqstr);
+                    let req = Request::from_str(&rqstr);
+
+                    for (_, route) in &self.routes {
+                        match route.is_match(&req.path) {
+                            true  => { handler = route.handler; break; },
+                            false => continue,
+                        }
+                    }
+
+                    //thread::spawn(move || {
+                        let stream = reader.into_inner();
+                        let mut writer = BufWriter::new(stream);
+                        let res = handler(req);
+                        let out = res.gen_output();
+                        println!("sending: '{:?}'", out);
+
+                        {
+                            writer.write(&out.as_slice()).unwrap();
+                        }
+
+                        let mut stream = writer.into_inner().unwrap();
+                        let _ = stream.shutdown(Shutdown::Both);
+                    //});
+                },
+                Err(e)      => { println!("{}", e); },
+            }
+        }
+
+        drop(listener);
+    }
+}
+
+fn main() {
+    let mut cnt = Canteen::new();
+
+    cnt.add_route("/hello", Route::_no_op);
+    cnt.run(("127.0.0.1", 8080));
 }
