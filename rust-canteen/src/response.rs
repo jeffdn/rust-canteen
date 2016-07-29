@@ -35,12 +35,78 @@ impl Response {
         res
     }
 
+    fn get_http_message(code: i32) -> String {
+        let msg = match code {
+            100 => "Continue",
+            101 => "Switching Protocols",
+            200 => "OK",
+            201 => "Created",
+            202 => "Accepted",
+            203 => "Non-Authoritative Information",
+            204 => "No Content",
+            205 => "Reset Content",
+            206 => "Partial Content",
+            300 => "Multiple Choices",
+            301 => "Moved Permanently",
+            302 => "Found",
+            303 => "See Other",
+            304 => "Not Modified",
+            305 => "Use Proxy",
+            307 => "Temporary Redirect",
+            400 => "Bad Request",
+            401 => "Unauthorized",
+            402 => "Payment Required",
+            403 => "Forbidden",
+            404 => "Not Found",
+            405 => "Method Not Allowed",
+            406 => "Not Acceptable",
+            407 => "Proxy Authentication Required",
+            408 => "Request Time Out",
+            409 => "Conflict",
+            410 => "Gone",
+            411 => "Length Required",
+            412 => "Precondition Failed",
+            413 => "Request Entity Too Large",
+            414 => "Request-URI Too Large",
+            415 => "Unsupported Media Type",
+            416 => "Requested Range Not Satisfiable",
+            417 => "Expectation Failed",
+            500 => "Internal Server Error",
+            501 => "Not Implemented",
+            502 => "Bad Gateway",
+            503 => "Service Unavailable",
+            504 => "Gateway Time-out",
+            505 => "HTTP Version Not Supported",
+            _     => "OK",
+        };
+
+        String::from(msg)
+    }
+
+    pub fn err_403(path: &str) -> Response {
+        let mut res = Response::new();
+
+        res.set_code(403);
+        res.append(format!("forbidden: {}", path));
+
+        res
+    }
+
+    pub fn err_404(path: &str) -> Response {
+        let mut res = Response::new();
+
+        res.set_code(403);
+        res.append(format!("not found: {}", path));
+
+        res
+    }
+
     /* set the response code
      * ex: res.set_code(200, "OK");
      */
-    pub fn set_code(&mut self, code: i32, cmsg: &str) {
+    pub fn set_code(&mut self, code: i32) {
         self.code = code;
-        self.cmsg = String::from(cmsg);
+        self.cmsg = Response::get_http_message(code);
     }
 
     /* set the content type

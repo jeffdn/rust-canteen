@@ -110,9 +110,16 @@ impl Route {
     pub fn _no_op(req: Request) -> Response {
         let mut res = Response::new();
 
-        res.set_code(404, "NOT FOUND");
-        res.append(format!("not found: {}", req.path));
+        res.append(req.path);
 
         res
+    }
+
+    pub fn err_403(req: Request) -> Response {
+        Response::err_403(&req.path)
+    }
+
+    pub fn err_404(req: Request) -> Response {
+        Response::err_404(&req.path)
     }
 }
