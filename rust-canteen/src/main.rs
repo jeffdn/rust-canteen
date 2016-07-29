@@ -118,10 +118,11 @@ impl Client {
  * Python microframework. much faster, however! :)
  */
 pub struct Canteen {
-    routes: HashMap<String, Route>,
-    server: TcpListener,
-    token:  Token,
-    conns:  Slab<Client>,
+    routes:  HashMap<String, Route>,
+    server:  TcpListener,
+    token:   Token,
+    conns:   Slab<Client>,
+    default: fn(Request) -> Response,
 }
 
 impl Handler for Canteen {
@@ -162,10 +163,11 @@ impl Handler for Canteen {
 impl Canteen {
     fn new<A: ToSocketAddrs>(addr: A) -> Canteen {
         Canteen {
-            routes: HashMap::new(),
-            server: TcpListener::bind(&addr.to_socket_addrs().unwrap().next().unwrap()).unwrap(),
-            token:  Token(1),
-            conns:  Slab::new_starting_at(Token(2), 2048),
+            routes:  HashMap::new(),
+            server:  TcpListener::bind(&addr.to_socket_addrs().unwrap().next().unwrap()).unwrap(),
+            token:   Token(1),
+            conns:   Slab::new_starting_at(Token(2), 2048),
+            default: Route::_no_op,
         }
     }
 
@@ -177,6 +179,10 @@ impl Canteen {
         }
 
         self.routes.insert(String::from(path), Route::new(&path, mlist, handler));
+    }
+
+    pub fn set_default(&mut self, handler: fn(Request) -> Response) {
+        self.default = handler;
     }
 
     fn get_client<'a>(&'a mut self, token: Token) -> &'a mut Client {
@@ -216,7 +222,7 @@ impl Canteen {
     }
 
     fn find_handler(&self, req: &Request) -> (fn(Request) -> Response) {
-        let mut handler: fn(Request) -> Response = Route::_no_op;
+        let mut handler: fn(Request) -> Response = self.default;
 
         for (_, route) in &self.routes {
             match (route).is_match(req) {
@@ -292,5 +298,6 @@ fn my_handler(req: Request) -> Response {
 fn main() {
     let mut cnt = Canteen::new(("127.0.0.1", 8080));
     cnt.add_route("/hello", vec![Method::Get], my_handler);
+    cnt.set_default(Route::err_404);
     cnt.run();
 }
