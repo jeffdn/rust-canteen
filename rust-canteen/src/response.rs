@@ -29,8 +29,8 @@ impl Response {
             payload:    Vec::new(),
         };
 
-        res.headers.insert(String::from("Connection"), String::from("close"));
-        res.headers.insert(String::from("Server"), String::from("canteen/0.0.1"));
+        res.add_header("Connection", "close");
+        res.add_header("Server", "canteen/0.0.1");
 
         res
     }

@@ -9,7 +9,6 @@ mod request;
 mod response;
 
 use std::io::Result;
-//use std::io::BufReader;
 use std::io::prelude::*;
 use std::net::ToSocketAddrs;
 use std::collections::HashMap;
@@ -115,6 +114,9 @@ impl Client {
     }
 }
 
+/* our primary object. similar interface to Flask, the
+ * Python microframework. much faster, however! :)
+ */
 pub struct Canteen {
     routes: HashMap<String, Route>,
     server: TcpListener,
