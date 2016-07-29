@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 #[allow(dead_code)]
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Eq, Hash, Debug)]
 pub enum Method {
     Get,
     Put,
@@ -84,14 +84,16 @@ impl Request {
         let mut buf: Vec<&str> = rqstr.splitn(2, "\r\n").collect();
         let ask: Vec<&str> = buf[0].splitn(3, ' ').collect();
 
-        self.method = match ask[1] {
+        println!("{:?}", ask);
+
+        self.method = match ask[0] {
             "GET"           => Method::Get,
             "PUT" | "PATCH" => Method::Put,
             "POST"          => Method::Post,
             "DELETE"        => Method::Delete,
             _               => Method::NoImpl,
         };
-        self.path = String::from(ask[2]);
+        self.path = String::from(ask[1]);
 
         loop {
             buf = buf[1].splitn(2, "\r\n").collect();
@@ -119,8 +121,8 @@ impl Request {
 
     pub fn has_params(&self) -> bool {
         match self.params {
-            Some(ref p) => true,
-            None        => false,
+            Some(_) => true,
+            None    => false,
         }
     }
 }
