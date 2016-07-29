@@ -87,7 +87,10 @@ impl Response {
         let mut res = Response::new();
 
         res.set_code(403);
-        res.append(format!("forbidden: {}", path));
+        res.set_content_type("text/html");
+        res.append(format!("<html><head>\
+                            <style>body {{ font-family: helvetica, sans-serif; }} p {{ font-size: 14 }}</style>\
+                            </head><body><h3>Your request failed</h3><p>forbidden: {}</p></body></html>", path));
 
         res
     }
@@ -96,7 +99,10 @@ impl Response {
         let mut res = Response::new();
 
         res.set_code(403);
-        res.append(format!("not found: {}", path));
+        res.set_content_type("text/html");
+        res.append(format!("<html><head>\
+                            <style>body {{ font-family: helvetica, sans-serif; }} p {{ font-size: 14 }}</style>\
+                            </head><body><h3>Your request failed</h3><p>not found: {}</p></body></html>", path));
 
         res
     }

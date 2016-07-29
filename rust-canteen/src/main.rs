@@ -289,8 +289,9 @@ fn my_handler(req: Request) -> Response {
     let mut res = Response::new();
 
     res.set_content_type("text/html");
-    res.append(String::from("<html><head><style>body { font-family: helvetica; } p { font-size: 12px; }</style></head>\
-                             <body><h4>It's alive!</h4><p>Welcome to Canteen! :)</p></body></html>"));
+    res.append(String::from("<html><head>\
+                             <style>body { font-family: helvetica, sans-serif; } p { font-size: 14px; }</style>\
+                             </head><body><h3>It's alive!</h3><p>Welcome to Canteen! :)</p></body></html>"));
 
     res
 }
