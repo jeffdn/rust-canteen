@@ -171,7 +171,7 @@ impl Canteen {
         }
     }
 
-    fn add_route(&mut self, path: &str, mlist: Vec<Method>, handler: fn(Request) -> Response) {
+    pub fn add_route(&mut self, path: &str, mlist: Vec<Method>, handler: fn(Request) -> Response) {
         let pc = String::from(path);
 
         if self.routes.contains_key(&pc) {
