@@ -21,28 +21,47 @@ pub struct Response {
 
 impl Response {
     pub fn new() -> Response {
-        Response {
+        let mut res = Response {
             code:       200,
-            cmsg:       String::new(),
+            cmsg:       String::from("OK"),
             ctype:      String::from("text/plain"),
             headers:    HashMap::new(),
             payload:    Vec::new(),
-        }
+        };
+
+        res.headers.insert(String::from("Connection"), String::from("close"));
+        res.headers.insert(String::from("Server"), String::from("canteen/0.0.1"));
+
+        res
     }
 
+    /* set the response code
+     * ex: res.set_code(200, "OK");
+     */
     pub fn set_code(&mut self, code: i32, cmsg: &str) {
         self.code = code;
         self.cmsg = String::from(cmsg);
     }
 
+    /* set the content type
+     * ex: res.set_content_type("text/html");
+     */
     pub fn set_content_type(&mut self, ctype: &str) {
         self.ctype = String::from(ctype);
     }
 
+    /* add an HTTP header
+     * ex: res.add_header("Connection", "close");
+     */
     pub fn add_header(&mut self, key: &str, value: &str) {
-        self.headers.insert(String::from(key), String::from(value));
+        if !self.headers.contains_key(key) {
+            self.headers.insert(String::from(key), String::from(value));
+        }
     }
 
+    /* add data to the payload -- can take any type that has
+     * implemented the canteen::response::ToOutput trait
+     */
     pub fn append<T: ToOutput>(&mut self, payload: T) {
         self.payload.extend(payload.to_output().into_iter());
     }
@@ -52,11 +71,14 @@ impl Response {
         let mut inter = String::new();
 
         inter.push_str(&format!("HTTP/1.1 {} {}\r\n", self.code, self.cmsg));
-        inter.push_str("Connection: close\r\n");
-        inter.push_str("Server: canteen/0.0.1\r\n");
+
+        for (key, value) in &self.headers {
+            inter.push_str(&format!("{}: {}\r\n", key, value));
+        }
+
         inter.push_str(&format!("Content-Type: {}\r\n", self.ctype));
         inter.push_str(&format!("Content-Length: {}\r\n", self.payload.len()));
-        inter.push_str("\r\n\r\n");
+        inter.push_str("\r\n");
 
         output.extend(inter.as_bytes());
         output.extend(self.payload.iter());
