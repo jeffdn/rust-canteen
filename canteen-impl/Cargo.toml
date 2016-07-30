@@ -1,0 +1,7 @@
+[package]
+name = "canteen-impl"
+version = "0.0.1"
+authors = ["jeffdn@gmail.com"]
+
+[dependencies.canteen]
+path = "/Users/jeff/code/personal/rust-stuff/rust-canteen"
