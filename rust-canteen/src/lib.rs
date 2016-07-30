@@ -4,9 +4,9 @@ extern crate regex;
 #[cfg(test)]
 mod tests;
 
-mod route;
-mod request;
-mod response;
+pub mod route;
+pub mod request;
+pub mod response;
 
 use std::io::Result;
 use std::io::prelude::*;
@@ -122,7 +122,7 @@ pub struct Canteen {
     server:  TcpListener,
     token:   Token,
     conns:   Slab<Client>,
-    default: fn(Request) -> Response,
+    default: fn(&Request) -> Response,
 }
 
 impl Handler for Canteen {
@@ -161,17 +161,17 @@ impl Handler for Canteen {
 }
 
 impl Canteen {
-    fn new<A: ToSocketAddrs>(addr: A) -> Canteen {
+    pub fn new<A: ToSocketAddrs>(addr: A) -> Canteen {
         Canteen {
             routes:  HashMap::new(),
             server:  TcpListener::bind(&addr.to_socket_addrs().unwrap().next().unwrap()).unwrap(),
             token:   Token(1),
             conns:   Slab::new_starting_at(Token(2), 2048),
-            default: Route::_no_op,
+            default: Route::err_404,
         }
     }
 
-    pub fn add_route(&mut self, path: &str, mlist: Vec<Method>, handler: fn(Request) -> Response) {
+    pub fn add_route(&mut self, path: &str, mlist: Vec<Method>, handler: fn(&Request) -> Response) {
         let pc = String::from(path);
 
         if self.routes.contains_key(&pc) {
@@ -181,7 +181,7 @@ impl Canteen {
         self.routes.insert(String::from(path), Route::new(&path, mlist, handler));
     }
 
-    pub fn set_default(&mut self, handler: fn(Request) -> Response) {
+    pub fn set_default(&mut self, handler: fn(&Request) -> Response) {
         self.default = handler;
     }
 
@@ -221,8 +221,8 @@ impl Canteen {
         self.reregister(evl);
     }
 
-    fn find_handler(&self, req: &Request) -> (fn(Request) -> Response) {
-        let mut handler: fn(Request) -> Response = self.default;
+    fn handle_request(&self, req: &Request) -> Vec<u8> {
+        let mut handler: fn(&Request) -> Response = self.default;
 
         for (_, route) in &self.routes {
             match (route).is_match(req) {
@@ -231,7 +231,7 @@ impl Canteen {
             }
         }
 
-        handler
+        handler(req).gen_output()
     }
 
     fn readable(&mut self, evl: &mut EventLoop<Canteen>, token: Token) -> Result<bool> {
@@ -239,10 +239,10 @@ impl Canteen {
             Ok(true)    => {
                 let buf = self.get_client(token).i_buf.clone();
                 let rqstr = String::from_utf8(buf).unwrap();
-                let req = Request::from_str(&rqstr);
-                let handler: fn(Request) -> Response = self.find_handler(&req);
+                let mut req = Request::from_str(&rqstr);
+                let output = self.handle_request(&mut req);
 
-                self.get_client(token).o_buf.extend(handler(req).gen_output());
+                self.get_client(token).o_buf.extend(output);
             },
             Ok(false)   => {},
             Err(e)      => {
@@ -278,27 +278,9 @@ impl Canteen {
         };
     }
 
-    fn run(&mut self) {
+    pub fn run(&mut self) {
         let mut evl = EventLoop::new().unwrap();
         self.register(&mut evl).ok();
         evl.run(self).unwrap();
     }
-}
-
-fn my_handler(req: Request) -> Response {
-    let mut res = Response::new();
-
-    res.set_content_type("text/html");
-    res.append(String::from("<html><head>\
-                             <style>body { font-family: helvetica, sans-serif; } p { font-size: 14px; }</style>\
-                             </head><body><h3>It's alive!</h3><p>Welcome to Canteen! :)</p></body></html>"));
-
-    res
-}
-
-fn main() {
-    let mut cnt = Canteen::new(("127.0.0.1", 8080));
-    cnt.add_route("/hello", vec![Method::Get], my_handler);
-    cnt.set_default(Route::err_404);
-    cnt.run();
 }

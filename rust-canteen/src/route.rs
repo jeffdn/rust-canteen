@@ -14,17 +14,15 @@ pub enum ParamType {
     Float,
 }
 
-#[derive(Debug)]
 pub struct Route {
-    pathdef:     String,
     matcher:     Regex,
     methods:     HashSet<Method>,
     params:      HashMap<String, ParamType>,
-    pub handler: fn(Request) -> Response,
+    pub handler: fn(&Request) -> Response,
 }
 
 impl Route {
-    pub fn new(path: &str, mlist: Vec<Method>, handler: fn(Request) -> Response) -> Route {
+    pub fn new(path: &str, mlist: Vec<Method>, handler: fn(&Request) -> Response) -> Route {
         let re = Regex::new(r"^<(?:(int|str):)?([\w_][a-zA-Z0-9_]*)>$").unwrap();
         let parts: Vec<&str> = path.split('/').filter(|&s| s != "").collect();
         let mut matcher: String = String::from(r"^");
@@ -79,7 +77,6 @@ impl Route {
         matcher.push_str("/?$");
 
         Route {
-            pathdef: String::from(path),
             matcher: Regex::new(&matcher).unwrap(),
             params:  params,
             methods: methods,
@@ -107,19 +104,11 @@ impl Route {
         }
     }
 
-    pub fn _no_op(req: Request) -> Response {
-        let mut res = Response::new();
-
-        res.append(req.path);
-
-        res
-    }
-
-    pub fn err_403(req: Request) -> Response {
+    pub fn err_403(req: &Request) -> Response {
         Response::err_403(&req.path)
     }
 
-    pub fn err_404(req: Request) -> Response {
+    pub fn err_404(req: &Request) -> Response {
         Response::err_404(&req.path)
     }
 }

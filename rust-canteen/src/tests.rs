@@ -37,7 +37,7 @@ fn test_fromuri_trait_float() {
 
 #[test]
 fn test_route_match_fail() {
-    let rt = Route::new("/api/v1/foo/<int:foo_id>", vec![Method::Get, Method::Post], Route::_no_op);
+    let rt = Route::new("/api/v1/foo/<int:foo_id>", vec![Method::Get, Method::Post], Route::err_404);
     let mut req = Request::new();
 
     req.path = String::from("/api/v1/bar");
@@ -63,7 +63,7 @@ fn test_route_match_fail() {
 
 #[test]
 fn test_route_match_simple() {
-    let route = Route::new("/api/v1/foo/<foo_stuff>", vec![Method::Get], Route::_no_op);
+    let route = Route::new("/api/v1/foo/<foo_stuff>", vec![Method::Get], Route::err_404);
     let parsed = route.parse("/api/v1/foo/blahblahblah").unwrap();
 
     assert_eq!("blahblahblah", parsed.get("foo_stuff").unwrap());
@@ -71,7 +71,7 @@ fn test_route_match_simple() {
 
 #[test]
 fn test_route_match_single_int() {
-    let route = Route::new("/api/v1/foo/<int:foo_id>", vec![Method::Get], Route::_no_op);
+    let route = Route::new("/api/v1/foo/<int:foo_id>", vec![Method::Get], Route::err_404);
     let parsed = route.parse("/api/v1/foo/123").unwrap();
 
     assert_eq!("123", parsed.get("foo_id").unwrap());
@@ -79,13 +79,13 @@ fn test_route_match_single_int() {
 
 #[test]
 fn test_route_match_single_str() {
-    let rt = Route::new("/api/v1/foo/<str:foo_stuff>", vec![Method::Get], Route::_no_op);
+    let rt = Route::new("/api/v1/foo/<str:foo_stuff>", vec![Method::Get], Route::err_404);
     assert_eq!("blahblahblah", rt.parse("/api/v1/foo/blahblahblah").unwrap().get("foo_stuff").unwrap());
 }
 
 #[test]
 fn test_route_match_many() {
-    let rt = Route::new("/api/v1/foo/<int:foo_id>/bar/<str:bar>/baz/<int:baz_id>", vec![Method::Get], Route::_no_op);
+    let rt = Route::new("/api/v1/foo/<int:foo_id>/bar/<str:bar>/baz/<int:baz_id>", vec![Method::Get], Route::err_404);
     let rm = rt.parse("/api/v1/foo/123/bar/bar/baz/456").unwrap();
 
     assert_eq!("123", rm.get("foo_id").unwrap());
@@ -96,8 +96,8 @@ fn test_route_match_many() {
 #[test]
 fn test_find_route_native_types() {
     let mut request = Request::new();
-    let routes: Vec<Route> = vec![Route::new("/api/v1/foo/<int:foo_id>", vec![Method::Get], Route::_no_op),
-                                  Route::new("/api/v1/foo/<int:foo_id>/bar/<int:bar_id>", vec![Method::Get], Route::_no_op)];
+    let routes: Vec<Route> = vec![Route::new("/api/v1/foo/<int:foo_id>", vec![Method::Get], Route::err_404),
+                                  Route::new("/api/v1/foo/<int:foo_id>/bar/<int:bar_id>", vec![Method::Get], Route::err_404)];
 
     request.method = Method::Get;
     request.path = String::from("/api/v1/foo/42/bar/1234");
