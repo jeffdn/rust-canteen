@@ -221,12 +221,16 @@ impl Canteen {
         self.reregister(evl);
     }
 
-    fn handle_request(&self, req: &Request) -> Vec<u8> {
+    fn handle_request(&self, req: &mut Request) -> Vec<u8> {
         let mut handler: fn(&Request) -> Response = self.default;
 
         for (_, route) in &self.routes {
             match (route).is_match(req) {
-                true  => { handler = route.handler; break; },
+                true  => {
+                    handler = route.handler;
+                    req.params = route.parse(&req.path);
+                    break;
+                },
                 false => continue,
             }
         }
