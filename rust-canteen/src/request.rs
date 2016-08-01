@@ -40,11 +40,11 @@ impl FromUri for f32 {
 
 #[derive(Debug)]
 pub struct Request {
-    pub method: Method,
-    pub path:   String,
-    pub params: Option<HashMap<String, String>>,
-    headers:    HashMap<String, String>,
-    payload:    Vec<u8>,
+    pub method:  Method,
+    pub path:    String,
+    pub params:  Option<HashMap<String, String>>,
+    pub payload: Vec<u8>,
+    headers:     HashMap<String, String>,
 }
 
 impl Request {
@@ -97,15 +97,15 @@ impl Request {
 
         loop {
             buf = buf[1].splitn(2, "\r\n").collect();
+            println!("{:?}", buf);
 
             if buf[0] == "" {
-                if buf[1] == "" {
+                if buf.len() == 1 || buf[1] == "" {
                     /* no payload */
                     break;
                 }
 
                 let tmp: String;
-                buf = buf[1].splitn(2, "\r\n").collect();
                 tmp = String::from(buf[1]);
                 self.payload.extend(tmp.as_bytes());
                 break;
