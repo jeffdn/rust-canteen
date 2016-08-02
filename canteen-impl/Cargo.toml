@@ -6,7 +6,7 @@ authors = ["jeffdn@gmail.com"]
 [dependencies]
 postgres = { version = "0.11", features = ["chrono"] }
 rustc-serialize = "0.3"
-chrono = { version = "0.2", features = ["rustc-serialize"] }
+chrono = "0.2"
 
 [dependencies.canteen]
-path = "/Users/jeff/code/personal/rust-stuff/rust-canteen"
+path = "../rust-canteen"
