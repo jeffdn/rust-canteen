@@ -97,7 +97,6 @@ impl Request {
 
         loop {
             buf = buf[1].splitn(2, "\r\n").collect();
-            println!("{:?}", buf);
 
             if buf[0] == "" {
                 if buf.len() == 1 || buf[1] == "" {

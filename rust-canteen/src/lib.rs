@@ -46,7 +46,6 @@ impl Client {
             Ok(size)  => {
                 match size {
                     Some(sz) => {
-                        println!("read {} ({}) bytes", sz, buf.len());
                         self.events.remove(EventSet::readable());
                         self.events.insert(EventSet::writable());
                         self.i_buf.extend(buf);
@@ -83,7 +82,6 @@ impl Client {
                     return Ok(true);
                 } else {
                     let tmp: Vec<u8> = self.o_buf.split_off(sz);
-                    println!("{:?}, -{}, {:?}", out, sz, tmp);
                     self.o_buf = tmp;
 
                     return Ok(false);
