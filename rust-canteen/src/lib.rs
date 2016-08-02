@@ -45,13 +45,13 @@ impl Client {
         match self.sock.try_read_buf(&mut buf) {
             Ok(size)  => {
                 match size {
-                    Some(sz) => {
+                    Some(_) => {
                         self.events.remove(EventSet::readable());
                         self.events.insert(EventSet::writable());
                         self.i_buf.extend(buf);
                         return Ok(true);
                     },
-                    None     => {
+                    None    => {
                         return Ok(false);
                     },
                 }
