@@ -47,7 +47,7 @@ impl Response {
         res
     }
 
-    fn get_http_message(code: i32) -> String {
+    pub fn get_http_message(code: i32) -> String {
         let msg = match code {
             100 => "Continue",
             101 => "Switching Protocols",
