@@ -95,14 +95,18 @@ impl Response {
         String::from(msg)
     }
 
+    fn err_body(message: &str, path: &str) -> String {
+        format!("<html><head>\
+                 <style>body {{ font-family: helvetica, sans-serif; }} p {{ font-size: 14 }}</style>\
+                 </head><body><h3>Your request failed</h3><p>{}: {}</p></body></html>", message, path)
+    }
+
     pub fn err_403(path: &str) -> Response {
         let mut res = Response::new();
 
         res.set_code(403);
         res.set_content_type("text/html");
-        res.append(format!("<html><head>\
-                            <style>body {{ font-family: helvetica, sans-serif; }} p {{ font-size: 14 }}</style>\
-                            </head><body><h3>Your request failed</h3><p>forbidden: {}</p></body></html>", path));
+        res.append(Response::err_body("forbidden", path));
 
         res
     }
@@ -112,9 +116,17 @@ impl Response {
 
         res.set_code(403);
         res.set_content_type("text/html");
-        res.append(format!("<html><head>\
-                            <style>body {{ font-family: helvetica, sans-serif; }} p {{ font-size: 14 }}</style>\
-                            </head><body><h3>Your request failed</h3><p>not found: {}</p></body></html>", path));
+        res.append(Response::err_body("not found", path));
+
+        res
+    }
+
+    pub fn err_500(path: &str) -> Response {
+        let mut res = Response::new();
+
+        res.set_code(500);
+        res.set_content_type("text/html");
+        res.append(Response::err_body("internal server error", path));
 
         res
     }
