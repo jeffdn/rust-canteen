@@ -172,6 +172,7 @@ fn main() {
 
     cnt.add_route("/person", vec![Method::Post], create_person);
     cnt.add_route("/person/<int:person_id>", vec![Method::Get], get_person);
+    cnt.add_route("/src/<path:path>", vec![Method::Get], Route::static_file);
     cnt.set_default(Route::err_404);
 
     cnt.run();

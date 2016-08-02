@@ -4,9 +4,21 @@ pub trait ToOutput {
     fn to_output(&self) -> &[u8];
 }
 
+impl ToOutput for str {
+    fn to_output(&self) -> &[u8] {
+        self.as_bytes()
+    }
+}
+
 impl ToOutput for String {
     fn to_output(&self) -> &[u8] {
         self.as_bytes()
+    }
+}
+
+impl ToOutput for Vec<u8> {
+    fn to_output(&self) -> &[u8] {
+        self.as_slice()
     }
 }
 
