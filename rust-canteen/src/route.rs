@@ -1,5 +1,10 @@
 extern crate regex;
 
+use std::env;
+use std::fs::File;
+use std::error::Error;
+use std::path::PathBuf;
+use std::io::prelude::*;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use regex::Regex;
@@ -12,6 +17,7 @@ pub enum ParamType {
     Integer,
     String,
     Float,
+    Path,
 }
 
 pub struct Route {
@@ -23,7 +29,7 @@ pub struct Route {
 
 impl Route {
     pub fn new(path: &str, mlist: Vec<Method>, handler: fn(&Request) -> Response) -> Route {
-        let re = Regex::new(r"^<(?:(int|str):)?([\w_][a-zA-Z0-9_]*)>$").unwrap();
+        let re = Regex::new(r"^<(?:(int|str|float|path):)?([\w_][a-zA-Z0-9_]*)>$").unwrap();
         let parts: Vec<&str> = path.split('/').filter(|&s| s != "").collect();
         let mut matcher: String = String::from(r"^");
         let mut params: HashMap<String, ParamType> = HashMap::new();
@@ -42,10 +48,10 @@ impl Route {
                     let ptype: ParamType = match caps.at(1) {
                         Some(x)     => {
                             match x.as_ref() {
-                                "string" | "str"    => ParamType::String,
-                                "integer" | "int"   => ParamType::Integer,
-                                "float"             => ParamType::Float,
-                                _                   => ParamType::String,
+                                "int"   => ParamType::Integer,
+                                "float" => ParamType::Float,
+                                "path"  => ParamType::Path,
+                                _       => ParamType::String,
 
                             }
                         }
@@ -53,9 +59,10 @@ impl Route {
                     };
 
                     let mstr: String = match ptype {
-                        ParamType::String  => String::from("(?:[^/])+"),
-                        ParamType::Integer => String::from("-*[0-9]+"),
-                        ParamType::Float   => String::from("-*[0-9]*[.]?[0-9]+"),
+                        ParamType::String  => String::from(r"(?:[^/])+"),
+                        ParamType::Integer => String::from(r"-*[0-9]+"),
+                        ParamType::Float   => String::from(r"-*[0-9]*[.]?[0-9]+"),
+                        ParamType::Path    => String::from(r".+"),
                     };
 
                     rc.push_str("/(?P<");
@@ -110,5 +117,45 @@ impl Route {
 
     pub fn err_404(req: &Request) -> Response {
         Response::err_404(&req.path)
+    }
+
+    pub fn static_file(req: &Request) -> Response {
+        let mut res = Response::new();
+
+        let cwd = env::current_dir().unwrap();
+        let clean = Route::replace_escape(&req.path);
+        let mut fpath = PathBuf::from(&cwd);
+        let mut fbuf: Vec<u8> = Vec::new();
+
+        for chunk in clean.split('/') {
+            if chunk == "" || chunk == "." || chunk == ".." {
+                /* bzzzzt */
+                continue;
+            }
+
+            fpath.push(&chunk);
+        }
+
+        let file = File::open(&fpath);
+
+        match file {
+            Ok(mut f)   => {
+                match f.read_to_end(&mut fbuf) {
+                    Ok(_)   => {
+                        res.set_code(200);
+                        res.set_content_type("text/plain");
+                        res.append(fbuf);
+                    },
+                    Err(e)  => {
+                        return Response::err_500(e.description());
+                    },
+                }
+            },
+            Err(_)      => {
+                return Response::err_404(&req.path);
+            }
+        }
+
+        res
     }
 }
