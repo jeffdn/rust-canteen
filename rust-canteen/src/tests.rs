@@ -1,17 +1,42 @@
 use route::*;
 use request::*;
+use response::*;
+
+#[test]
+fn test_response_http_message() {
+    assert_eq!("OK", Response::get_http_message(200));
+}
+
+#[test]
+fn test_tooutput_trait_str() {
+    let ar: [u8; 3] = [97, 98, 99];
+
+    assert_eq!(ar, ToOutput::to_output("abc"));
+}
+
+#[test]
+fn test_tooutput_trait_string() {
+    let ar: [u8; 3] = [97, 98, 99];
+    let st = String::from("abc");
+
+    assert_eq!(ar, ToOutput::to_output(&st));
+}
+
+#[test]
+fn test_tooutput_trait_vec() {
+    let ar: [u8; 5] = [1, 2, 3, 4, 5];
+    let vc: Vec<u8> = vec![1, 2, 3, 4, 5];
+
+    assert_eq!(ar, ToOutput::to_output(&vc));
+}
 
 #[test]
 fn test_fromuri_trait_i32() {
     let mut orig: String = String::from("1234");
-    let mut conv: i32 = FromUri::from_uri(&orig);
-
-    assert_eq!(1234, conv);
+    assert_eq!(1234, FromUri::from_uri(&orig));
 
     orig = String::from("-4321");
-    conv = FromUri::from_uri(&orig);
-
-    assert_eq!(-4321, conv);
+    assert_eq!(-4321, FromUri::from_uri(&orig));
 }
 
 #[test]
@@ -25,14 +50,10 @@ fn test_fromuri_trait_string() {
 #[test]
 fn test_fromuri_trait_float() {
     let mut orig: String = String::from("123.45");
-    let mut conv: f32 = FromUri::from_uri(&orig);
-
-    assert_eq!(123.45, conv);
+    assert_eq!(123.45f32, FromUri::from_uri(&orig));
 
     orig = String::from("-54.321");
-    conv = FromUri::from_uri(&orig);
-
-    assert_eq!(-54.321, conv);
+    assert_eq!(-54.321f32, FromUri::from_uri(&orig));
 }
 
 #[test]
