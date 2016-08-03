@@ -8,6 +8,15 @@ the library is located above in the `rust-canteen` directory, and there is code 
 an example implementation in the [canteen-impl](https://github.com/jeffdn/canteen-impl)
 repository.
 
+## Usage
+
+It's by no means complete, but I'm working on it! To install and check it out, add
+the following to your Cargo.toml:
+```toml
+[dependencies]
+canteen = { version = "0.0.1", path = "/path/to/rust-stuff/rust-canteen" }
+```
+
 ## Example
 
 ```rust
@@ -32,10 +41,4 @@ fn main() {
     cnt.add_route("/", vec![Method::Get], handler);
     cnt.run();
 }
-```
-It's by no means complete, but I'm working on it! To install and check it out, add
-the following to your Cargo.toml:
-```toml
-[dependencies]
-canteen = { version = "0.0.1", path = "/path/to/rust-stuff/rust-canteen" }
 ```
