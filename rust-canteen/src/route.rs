@@ -6,7 +6,6 @@ use std::error::Error;
 use std::path::PathBuf;
 use std::io::prelude::*;
 use std::collections::HashMap;
-use std::collections::HashSet;
 use regex::Regex;
 
 use request::*;
@@ -20,24 +19,25 @@ pub enum ParamType {
     Path,
 }
 
+#[derive(PartialEq, Eq, Hash, Debug)]
+pub struct RouteDef {
+    pub pathdef: String,
+    pub method:  Method,
+}
+
 pub struct Route {
     matcher:     Regex,
-    methods:     HashSet<Method>,
+    method:      Method,
     params:      HashMap<String, ParamType>,
     pub handler: fn(&Request) -> Response,
 }
 
 impl Route {
-    pub fn new(path: &str, mlist: Vec<Method>, handler: fn(&Request) -> Response) -> Route {
+    pub fn new(path: &str, method: Method, handler: fn(&Request) -> Response) -> Route {
         let re = Regex::new(r"^<(?:(int|str|float|path):)?([\w_][a-zA-Z0-9_]*)>$").unwrap();
         let parts: Vec<&str> = path.split('/').filter(|&s| s != "").collect();
         let mut matcher: String = String::from(r"^");
         let mut params: HashMap<String, ParamType> = HashMap::new();
-        let mut methods: HashSet<Method> = HashSet::new();
-
-        for m in mlist {
-            methods.insert(m);
-        }
 
         for part in parts {
             let chunk: String = match re.is_match(part) {
@@ -86,13 +86,13 @@ impl Route {
         Route {
             matcher: Regex::new(&matcher).unwrap(),
             params:  params,
-            methods: methods,
+            method:  method,
             handler: handler,
         }
     }
 
     pub fn is_match(&self, req: &Request) -> bool {
-        self.matcher.is_match(&req.path) && self.methods.contains(&req.method)
+        self.matcher.is_match(&req.path) && self.method == req.method
     }
 
     pub fn parse(&self, path: &str) -> Option<HashMap<String, String>> {

@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
-#[allow(dead_code)]
-#[derive(PartialEq, Eq, Hash, Debug)]
+#[derive(PartialEq, Eq, Hash, Debug, Copy, Clone)]
 pub enum Method {
     Get,
     Put,

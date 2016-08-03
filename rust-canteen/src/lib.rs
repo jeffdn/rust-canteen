@@ -12,6 +12,7 @@ use std::io::Result;
 use std::io::prelude::*;
 use std::net::ToSocketAddrs;
 use std::collections::HashMap;
+use std::collections::HashSet;
 use mio::tcp::{TcpListener, TcpStream};
 use mio::util::Slab;
 use mio::*;
@@ -116,7 +117,7 @@ impl Client {
  * Python microframework. much faster, however! :)
  */
 pub struct Canteen {
-    routes:  HashMap<String, Route>,
+    routes:  HashMap<RouteDef, Route>,
     server:  TcpListener,
     token:   Token,
     conns:   Slab<Client>,
@@ -170,13 +171,24 @@ impl Canteen {
     }
 
     pub fn add_route(&mut self, path: &str, mlist: Vec<Method>, handler: fn(&Request) -> Response) {
-        let pc = String::from(path);
+        let mut methods: HashSet<Method> = HashSet::new();
 
-        if self.routes.contains_key(&pc) {
-            panic!("a route handler for {} has already been defined!", path);
+        for m in mlist {
+            methods.insert(m);
         }
 
-        self.routes.insert(String::from(path), Route::new(&path, mlist, handler));
+        for m in methods {
+            let rd = RouteDef {
+                pathdef:    String::from(path),
+                method:     m,
+            };
+
+            if self.routes.contains_key(&rd) {
+                panic!("a route handler for {} has already been defined!", path);
+            }
+
+            self.routes.insert(rd, Route::new(&path, m, handler));
+        }
     }
 
     pub fn set_default(&mut self, handler: fn(&Request) -> Response) {
