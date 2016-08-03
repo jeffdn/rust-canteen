@@ -1,3 +1,5 @@
+extern crate chrono;
+
 use std::collections::HashMap;
 
 pub trait ToOutput {
@@ -41,8 +43,11 @@ impl Response {
             payload:    Vec::new(),
         };
 
+        let now = chrono::UTC::now().format("%a, %d %b %Y, %H:%M:%S GMT").to_string();
+
         res.add_header("Connection", "close");
         res.add_header("Server", "canteen/0.0.1");
+        res.add_header("Date", &now);
 
         res
     }

@@ -4,5 +4,6 @@ version = "0.0.1"
 authors = ["jeffdn@gmail.com"]
 
 [dependencies]
+chrono = "0.2"
 regex = "0.1"
 mio = "0.5"
