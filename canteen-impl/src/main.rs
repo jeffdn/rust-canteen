@@ -71,6 +71,8 @@ impl Decodable for _PersonCreate {
 
 fn create_person(req: &Request) -> Response {
     let mut res = Response::new();
+    res.set_content_type("application/json");
+
     let pers: _PersonCreate = json::decode(&String::from_utf8(req.payload.clone()).unwrap()).unwrap();
 
     let conn = Connection::connect("postgresql://jeff@localhost/jeff", SslMode::None).unwrap();
@@ -129,14 +131,45 @@ fn create_person(req: &Request) -> Response {
     res
 }
 
-fn get_person(req: &Request) -> Response {
+fn get_many_person(req: &Request) -> Response {
     let mut res = Response::new();
+    res.set_content_type("application/json");
+
+    let conn = Connection::connect("postgresql://jeff@localhost/jeff", SslMode::None).unwrap();
+    let cur = conn.query("select id, first_name, last_name, dob from person order by id", &[]);
+
+    match cur {
+        Ok(rows)    => {
+            let mut people: Vec<Person> = Vec::new();
+
+            for row in rows.iter() {
+                people.push(Person {
+                    id:         row.get("id"),
+                    first_name: row.get("first_name"),
+                    last_name:  row.get("last_name"),
+                    dob:        row.get("dob"),
+                });
+            }
+
+            res.append(json::encode(&people).unwrap());
+        },
+        Err(e)      => {
+            res.set_code(500);
+            res.append(format!("{{ message: '{:?}' }}", e));
+        }
+    }
+
+    res
+}
+
+fn get_single_person(req: &Request) -> Response {
+    let mut res = Response::new();
+    res.set_content_type("application/json");
+
     let person_id: i32 = req.get("person_id");
 
     let conn = Connection::connect("postgresql://jeff@localhost/jeff", SslMode::None).unwrap();
     let cur = conn.query("select id, first_name, last_name, dob from person where id = $1", &[&person_id]);
-
-    res.set_content_type("application/json");
 
     match cur {
         Ok(rows)    => {
@@ -171,7 +204,8 @@ fn main() {
     let mut cnt = Canteen::new(("127.0.0.1", 8080));
 
     cnt.add_route("/person", vec![Method::Post], create_person);
-    cnt.add_route("/person/<int:person_id>", vec![Method::Get], get_person);
+    cnt.add_route("/person", vec![Method::Get], get_many_person);
+    cnt.add_route("/person/<int:person_id>", vec![Method::Get], get_single_person);
     cnt.add_route("/src/<path:path>", vec![Method::Get], Route::static_file);
     cnt.set_default(Route::err_404);
 
