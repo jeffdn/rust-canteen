@@ -14,7 +14,7 @@ It's by no means complete, but I'm working on it! To install and check it out, a
 the following to your Cargo.toml:
 ```toml
 [dependencies]
-canteen = { version = "0.0.1", path = "/path/to/rust-stuff/rust-canteen" }
+canteen = { version = "0.1", path = "/path/to/rust-canteen" }
 ```
 
 ## Example
