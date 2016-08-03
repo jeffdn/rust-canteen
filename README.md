@@ -1,15 +1,15 @@
-# rust-stuff
+# Canteen
 
-This project contains my attempts to learn Rust, an exciting new programming language
-being sponsored by the Mozilla Foundation. Given that my first language was C, I had
-long desired learning another systems-level language that was not in the C familiy.
-
-## Canteen
+## Description
 
 Canteen is the first project that I'm implementing in Rust. It's a simple clone of
 [Flask](http://flask.pocoo.org), my very favorite Python web framework. The code for
 the library is located above in the `rust-canteen` directory, and there is code for
-an example implementation in the `canteen-impl` directory. Here's a simple example:
+an example implementation in the [canteen-impl](https://github.com/jeffdn/canteen-impl)
+repository.
+
+## Example
+
 ```rust
 extern crate canteen;
 
