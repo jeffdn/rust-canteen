@@ -37,16 +37,8 @@ impl Encodable for Person {
     }
 }
 
-/* a person record without id, for HTTP POST */
-#[derive(Debug)]
-struct _PersonCreate {
-    first_name: String,
-    last_name:  String,
-    dob:        Date,
-}
-
-impl Decodable for _PersonCreate {
-    fn decode<D: Decoder>(d: &mut D) -> Result<_PersonCreate, D::Error> {
+impl Decodable for Person {
+    fn decode<D: Decoder>(d: &mut D) -> Result<Person, D::Error> {
         d.read_struct("root", 3, |d| {
             let first_name = try!(d.read_struct_field("first_name", 0, |d| { d.read_str() }));
             let last_name = try!(d.read_struct_field("last_name", 0, |d| { d.read_str() }));
@@ -54,7 +46,8 @@ impl Decodable for _PersonCreate {
 
             match Date::parse_from_str(&pre_dob, "%Y-%m-%d") {
                 Ok(dob) => {
-                    Ok(_PersonCreate {
+                    Ok(Person {
+                        id:         0,
                         first_name: first_name,
                         last_name:  last_name,
                         dob:        dob,
@@ -73,7 +66,7 @@ fn create_person(req: &Request) -> Response {
     let mut res = Response::new();
     res.set_content_type("application/json");
 
-    let pers: _PersonCreate = json::decode(&String::from_utf8(req.payload.clone()).unwrap()).unwrap();
+    let pers: Person = json::decode(&String::from_utf8(req.payload.clone()).unwrap()).unwrap();
 
     let conn = Connection::connect("postgresql://jeff@localhost/jeff", SslMode::None).unwrap();
     let cur = conn.query("insert into person (first_name, last_name, dob)\
