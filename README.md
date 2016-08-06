@@ -39,10 +39,7 @@ with decimal points
 ```rust
 extern crate canteen;
 
-use canteen::Canteen;
-use canteen::route::*;
-use canteen::request::*;
-use canteen::response::*;
+use canteen::*;
 
 fn hello_handler(req: &Request) -> Response {
     let mut res = Response::new();
