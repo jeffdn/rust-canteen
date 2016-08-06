@@ -83,8 +83,6 @@ impl Request {
         let mut buf: Vec<&str> = rqstr.splitn(2, "\r\n").collect();
         let ask: Vec<&str> = buf[0].splitn(3, ' ').collect();
 
-        println!("{:?}", ask);
-
         self.method = match ask[0] {
             "GET"           => Method::Get,
             "PUT" | "PATCH" => Method::Put,

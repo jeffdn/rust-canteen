@@ -17,9 +17,9 @@ use mio::tcp::{TcpListener, TcpStream};
 use mio::util::Slab;
 use mio::*;
 
-use route::*;
-use request::*;
-use response::*;
+pub use route::*;
+pub use request::*;
+pub use response::*;
 
 struct Client {
     sock:   TcpStream,
@@ -73,17 +73,16 @@ impl Client {
      *  - Err(e):    something dun fucked up
      */
     fn writable(&mut self) -> Result<bool> {
-        let tmp = self.o_buf.clone();
-        let out = tmp.as_slice();
-        match self.sock.write(&out) {
+        let out = self.o_buf.clone();
+
+        match self.sock.write(&out.as_slice()) {
             Ok(sz)  => {
                 if sz == self.o_buf.len() {
                     /* we did it! */
                     self.events.remove(EventSet::writable());
                     return Ok(true);
                 } else {
-                    let tmp: Vec<u8> = self.o_buf.split_off(sz);
-                    self.o_buf = tmp;
+                    self.o_buf = self.o_buf.split_off(sz);
 
                     return Ok(false);
                 }
