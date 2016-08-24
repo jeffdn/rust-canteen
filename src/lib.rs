@@ -169,7 +169,7 @@ impl Canteen {
         }
     }
 
-    pub fn add_route(&mut self, path: &str, mlist: Vec<Method>, handler: fn(&Request) -> Response) {
+    pub fn add_route(&mut self, path: &str, mlist: Vec<Method>, handler: fn(&Request) -> Response) -> &mut Canteen {
         let mut methods: HashSet<Method> = HashSet::new();
 
         for m in mlist {
@@ -188,6 +188,8 @@ impl Canteen {
 
             self.routes.insert(rd, Route::new(&path, m, handler));
         }
+
+        self
     }
 
     pub fn set_default(&mut self, handler: fn(&Request) -> Response) {
