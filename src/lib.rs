@@ -40,7 +40,7 @@ impl Client {
         }
     }
 
-    fn readable(&mut self) -> Result<bool> {
+    fn receive(&mut self) -> Result<bool> {
         let mut buf: Vec<u8> = Vec::with_capacity(2048);
 
         match self.sock.try_read_buf(&mut buf) {
@@ -72,7 +72,7 @@ impl Client {
      *  - Ok(false): keep listening for writeable event and continue next time
      *  - Err(e):    something dun fucked up
      */
-    fn writable(&mut self) -> Result<bool> {
+    fn send(&mut self) -> Result<bool> {
         let out = self.o_buf.clone();
 
         match self.sock.write(&out.as_slice()) {
@@ -149,7 +149,7 @@ impl Handler for Canteen {
         }
 
         if events.is_writable() {
-            match self.get_client(token).writable() {
+            match self.get_client(token).send() {
                 Ok(true)    => { self.reset_connection(token); },
                 Ok(false)   => { let _ = self.get_client(token).reregister(evl); },
                 Err(_)      => { panic!("something really bad happened!"); },
@@ -248,7 +248,7 @@ impl Canteen {
     }
 
     fn readable(&mut self, evl: &mut EventLoop<Canteen>, token: Token) -> Result<bool> {
-        match self.get_client(token).readable() {
+        match self.get_client(token).receive() {
             Ok(true)    => {
                 let buf = self.get_client(token).i_buf.clone();
                 let rqstr = String::from_utf8(buf).unwrap();
