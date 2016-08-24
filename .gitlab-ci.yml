@@ -1,0 +1,13 @@
+# use Rust stable
+image: "scorpil/rust:stable"
+
+# install a C compiler
+before_script:
+- apt-get update -yqq
+- apt-get install -yqq --no-install-recommends build-essential
+
+# run tests via Cargo
+test:cargo:
+  script:
+  - rustc --version && cargo --version
+  - cargo test --verbose --jobs 1 --release
