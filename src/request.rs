@@ -41,8 +41,8 @@ impl FromUri for f32 {
 pub struct Request {
     pub method:  Method,
     pub path:    String,
-    pub params:  Option<HashMap<String, String>>,
     pub payload: Vec<u8>,
+    pub params:  HashMap<String, String>,
     headers:     HashMap<String, String>,
 }
 
@@ -52,22 +52,13 @@ impl Request {
             method:  Method::NoImpl,
             path:    String::new(),
             headers: HashMap::new(),
-            params:  None,
+            params:  HashMap::new(),
             payload: Vec::new(),
         }
     }
 
-    fn _get(&self, name: &str) -> Option<&String> {
-        let val: Option<&String> = match self.params {
-            Some(ref p) => p.get(name),
-            None        => None,
-        };
-
-        val
-    }
-
     pub fn get<T>(&self, name: &str) -> T where T: FromUri {
-        match self._get(&name) {
+        match self.params.get(name) {
             Some(item) => FromUri::from_uri(&item),
             None       => panic!("invalid route parameter {:?}", name),
         }
@@ -101,9 +92,7 @@ impl Request {
                     break;
                 }
 
-                let tmp: String;
-                tmp = String::from(buf[1]);
-                self.payload.extend(tmp.as_bytes());
+                self.payload.extend(buf[1].as_bytes());
                 break;
             }
 
@@ -116,9 +105,6 @@ impl Request {
     }
 
     pub fn has_params(&self) -> bool {
-        match self.params {
-            Some(_) => true,
-            None    => false,
-        }
+        self.params.len() > 0
     }
 }

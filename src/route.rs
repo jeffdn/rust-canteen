@@ -95,20 +95,20 @@ impl Route {
         self.matcher.is_match(&req.path) && self.method == req.method
     }
 
-    pub fn parse(&self, path: &str) -> Option<HashMap<String, String>> {
+    pub fn parse(&self, path: &str) -> HashMap<String, String> {
         let mut params: HashMap<String, String> = HashMap::new();
 
-        return match self.matcher.is_match(&path) {
+        match self.matcher.is_match(&path) {
             true  => {
                 let caps = self.matcher.captures(path).unwrap();
                 for (param, _) in &self.params {
                     params.insert(param.clone(), String::from(caps.name(&param).unwrap()));
                 }
-
-                Some(params)
             },
-            false => None,
+            false => {},
         }
+
+        params
     }
 
     pub fn replace_escape(path: &str) -> String {
