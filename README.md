@@ -28,10 +28,10 @@ extracted to perform various operations. Currently, the following variable types
 be used:
 
 - `<path:name>` will greedily take all path data contained
-  - ex: `cnt.add_route("/static/<path:name>", vec![Method::Get], Route::static_file)` will
+  - ex: `cnt.add_route("/static/<path:name>", &[Method::Get], Route::static_file)` will
   serve anything in the `/static/` directory as a file
 - `<int:name>` will return an integer from a path segment
-  - ex: `cnt.add_route("/api/foo/<int:foo_id>", vec![Method::Get], my_handler)` will match
+  - ex: `cnt.add_route("/api/foo/<int:foo_id>", &[Method::Get], my_handler)` will match
   `"/api/foo/123"` but not `"/api/foo/123.34"` or `"/api/foo/bar"`
 - `<float:name>` does the same thing as the `int` parameter definition, but matches numbers
 with decimal points
