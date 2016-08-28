@@ -9,6 +9,7 @@
 extern crate chrono;
 
 use std::collections::HashMap;
+use utils::make_response;
 
 pub trait ToOutput {
     fn to_output(&self) -> &[u8];
@@ -121,33 +122,15 @@ impl Response {
     }
 
     pub fn err_403(path: &str) -> Response {
-        let mut res = Response::new();
-
-        res.set_code(403);
-        res.set_content_type("text/html");
-        res.append(Response::err_body("forbidden", path));
-
-        res
+        make_response(Response::err_body("forbidden", path), "text/html", 403)
     }
 
     pub fn err_404(path: &str) -> Response {
-        let mut res = Response::new();
-
-        res.set_code(403);
-        res.set_content_type("text/html");
-        res.append(Response::err_body("not found", path));
-
-        res
+        make_response(Response::err_body("not found", path), "text/html", 403)
     }
 
     pub fn err_500(path: &str) -> Response {
-        let mut res = Response::new();
-
-        res.set_code(500);
-        res.set_content_type("text/html");
-        res.append(Response::err_body("internal server error", path));
-
-        res
+        make_response(Response::err_body("internal server error", path), "text/html", 500)
     }
 
     /* set the response code
