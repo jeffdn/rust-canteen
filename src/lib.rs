@@ -81,26 +81,25 @@ impl Client {
      *  - Err(e):    something dun fucked up
      */
     fn send(&mut self) -> Result<bool> {
-        let out = self.o_buf.clone();
-
-        match self.sock.write(&out.as_slice()) {
-            Ok(sz)  => {
-                if sz == self.o_buf.len() {
-                    /* we did it! */
-                    self.events.remove(EventSet::writable());
-                    return Ok(true);
-                } else {
-                    self.o_buf = self.o_buf.split_off(sz);
-
-                    return Ok(false);
+        while self.o_buf.len() > 0 {
+            match self.sock.write(&self.o_buf.as_slice()) {
+                Ok(sz)  => {
+                    if sz == self.o_buf.len() {
+                        /* we did it! */
+                        self.events.remove(EventSet::writable());
+                        break;
+                    } else {
+                        /* keep going */
+                        self.o_buf = self.o_buf.split_off(sz);
+                    }
+                },
+                Err(e)  => {
+                    panic!("failed to write to socket! <token: {:?}> <error: {:?}>", self.token, e);
                 }
-            },
-            Err(e)  => {
-                panic!("failed to write to socket! <token: {:?}> <error: {:?}>", self.token, e);
             }
         }
 
-        Ok(false)
+        Ok(true)
     }
 
     fn register(&mut self, evl: &mut EventLoop<Canteen>) -> Result<()> {
