@@ -45,6 +45,7 @@ use canteen::*;
 fn hello_handler(req: &Request) -> Response {
     let mut res = Response::new();
 
+    res.set_code(200);
     res.set_content_type("text/plain");
     res.append("Hello, world!");
 
@@ -55,10 +56,8 @@ fn double_handler(req: &Request) -> Response {
     let mut res = Response::new();
     let to_dbl: i32 = req.get("to_dbl");
 
-    res.set_content_type("text/plain");
-    res.append(format!("{}", to_dbl * 2));
-
-    res
+    /* simpler response generation syntax */
+    make_response(format!("{}", to_dbl * 2), "text/plain", 200)
 }
 
 fn main() {
@@ -68,13 +67,13 @@ fn main() {
     cnt.set_default(Route::err_404);
 
     // respond to requests to / with "Hello, world!"
-    cnt.add_route("/", vec![Method::Get], hello_handler);
+    cnt.add_route("/", &[Method::Get], hello_handler);
 
     // pull a variable from the path and do something with it
-    cnt.add_route("/double/<int:to_dbl>", vec![Method::Get], double_handler);
+    cnt.add_route("/double/<int:to_dbl>", &[Method::Get], double_handler);
 
     // serve raw files from the /static/ directory
-    cnt.add_route("/static/<path:path>", vec![Method::Get], Route::static_file);
+    cnt.add_route("/static/<path:path>", &[Method::Get], Route::static_file);
 
     cnt.run();
 }
