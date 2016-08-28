@@ -124,6 +124,7 @@ impl Client {
  */
 pub struct Canteen {
     routes:  HashMap<RouteDef, Route>,
+    rcache:  HashMap<RouteDef, RouteDef>,
     server:  TcpListener,
     token:   Token,
     conns:   Slab<Client>,
@@ -169,6 +170,7 @@ impl Canteen {
     pub fn new<A: ToSocketAddrs>(addr: A) -> Canteen {
         Canteen {
             routes:  HashMap::new(),
+            rcache:  HashMap::new(),
             server:  TcpListener::bind(&addr.to_socket_addrs().unwrap().next().unwrap()).unwrap(),
             token:   Token(1),
             conns:   Slab::new_starting_at(Token(2), 2048),
@@ -240,17 +242,26 @@ impl Canteen {
         self.reregister(evl);
     }
 
-    fn handle_request(&self, req: &mut Request) -> Vec<u8> {
+    fn handle_request(&mut self, req: &mut Request) -> Vec<u8> {
+        let resolved = RouteDef { pathdef: req.path.clone(), method: req.method };
         let mut handler: fn(&Request) -> Response = self.default;
 
-        for (_, route) in &self.routes {
-            match (route).is_match(req) {
-                true  => {
-                    handler = route.handler;
-                    req.params = route.parse(&req.path);
-                    break;
-                },
-                false => continue,
+        if self.rcache.contains_key(&resolved) {
+            let route = self.routes.get(self.rcache.get(&resolved).unwrap()).unwrap();
+
+            handler = route.handler;
+            req.params = route.parse(&req.path);
+        } else {
+            for (path, route) in &self.routes {
+                match (route).is_match(req) {
+                    true  => {
+                        handler = route.handler;
+                        req.params = route.parse(&req.path);
+                        self.rcache.insert(resolved, (*path).clone());
+                        break;
+                    },
+                    false => continue,
+                }
             }
         }
 

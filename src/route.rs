@@ -27,7 +27,7 @@ pub enum ParamType {
     Path,
 }
 
-#[derive(PartialEq, Eq, Hash, Debug)]
+#[derive(PartialEq, Eq, Hash, Debug, Clone)]
 pub struct RouteDef {
     pub pathdef: String,
     pub method:  Method,
