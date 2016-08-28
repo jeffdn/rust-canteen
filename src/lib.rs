@@ -12,6 +12,7 @@ extern crate regex;
 #[cfg(test)]
 mod tests;
 
+pub mod utils;
 pub mod route;
 pub mod request;
 pub mod response;
@@ -25,6 +26,7 @@ use mio::tcp::{TcpListener, TcpStream};
 use mio::util::Slab;
 use mio::*;
 
+pub use utils::*;
 pub use route::*;
 pub use request::*;
 pub use response::*;
