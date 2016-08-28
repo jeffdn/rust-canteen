@@ -10,11 +10,12 @@ repository.
 
 ## Usage
 
-It's by no means complete, but I'm working on it! To install and check it out, add
-the following to your Cargo.toml:
+It's by no means complete, but I'm working on it, and it's now available on
+[crates.io](https://crates.io/)! To install and check it out, add the following to
+your Cargo.toml:
 ```toml
 [dependencies]
-canteen = { version = "0.1", path = "/path/to/rust-canteen" }
+canteen = "0.1"
 ```
 
 ## Example
