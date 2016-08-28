@@ -41,7 +41,7 @@ impl ToOutput for Vec<u8> {
 
 #[derive(Debug)]
 pub struct Response {
-    code:       i32,
+    code:       u16,
     cmsg:       String,
     ctype:      String,
     headers:    HashMap<String, String>,
@@ -67,7 +67,7 @@ impl Response {
         res
     }
 
-    pub fn get_http_message(code: i32) -> String {
+    pub fn get_http_message(code: u16) -> String {
         let msg = match code {
             100 => "Continue",
             101 => "Switching Protocols",
@@ -109,7 +109,7 @@ impl Response {
             503 => "Service Unavailable",
             504 => "Gateway Time-out",
             505 => "HTTP Version Not Supported",
-            _     => "OK",
+            _   => "OK",
         };
 
         String::from(msg)
@@ -136,7 +136,7 @@ impl Response {
     /* set the response code
      * ex: res.set_code(200, "OK");
      */
-    pub fn set_code(&mut self, code: i32) {
+    pub fn set_code(&mut self, code: u16) {
         self.code = code;
         self.cmsg = Response::get_http_message(code);
     }
