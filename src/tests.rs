@@ -93,7 +93,7 @@ fn test_route_match_fail() {
 #[test]
 fn test_route_match_simple() {
     let route = Route::new("/api/v1/foo/<foo_stuff>", Method::Get, Route::err_404);
-    let parsed = route.parse("/api/v1/foo/blahblahblah").unwrap();
+    let parsed = route.parse("/api/v1/foo/blahblahblah");
 
     assert_eq!("blahblahblah", parsed.get("foo_stuff").unwrap());
 }
@@ -101,7 +101,7 @@ fn test_route_match_simple() {
 #[test]
 fn test_route_match_single_int() {
     let route = Route::new("/api/v1/foo/<int:foo_id>", Method::Get, Route::err_404);
-    let parsed = route.parse("/api/v1/foo/123").unwrap();
+    let parsed = route.parse("/api/v1/foo/123");
 
     assert_eq!("123", parsed.get("foo_id").unwrap());
 }
@@ -109,13 +109,13 @@ fn test_route_match_single_int() {
 #[test]
 fn test_route_match_single_str() {
     let rt = Route::new("/api/v1/foo/<str:foo_stuff>", Method::Get, Route::err_404);
-    assert_eq!("blahblahblah", rt.parse("/api/v1/foo/blahblahblah").unwrap().get("foo_stuff").unwrap());
+    assert_eq!("blahblahblah", rt.parse("/api/v1/foo/blahblahblah").get("foo_stuff").unwrap());
 }
 
 #[test]
 fn test_route_match_many() {
     let rt = Route::new("/api/v1/foo/<int:foo_id>/bar/<str:bar>/baz/<int:baz_id>", Method::Get, Route::err_404);
-    let rm = rt.parse("/api/v1/foo/123/bar/bar/baz/456").unwrap();
+    let rm = rt.parse("/api/v1/foo/123/bar/bar/baz/456");
 
     assert_eq!("123", rm.get("foo_id").unwrap());
     assert_eq!("bar", rm.get("bar").unwrap());
