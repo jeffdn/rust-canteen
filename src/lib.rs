@@ -43,8 +43,8 @@ impl Client {
             sock:   sock,
             token:  token,
             events: EventSet::hup(),
-            i_buf:  Vec::new(),
-            o_buf:  Vec::new(),
+            i_buf:  Vec::with_capacity(2048),
+            o_buf:  Vec::with_capacity(2048),
         }
     }
 

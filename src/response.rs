@@ -54,7 +54,7 @@ impl Response {
             cmsg:       String::from("OK"),
             ctype:      String::from("text/plain"),
             headers:    HashMap::new(),
-            payload:    Vec::new(),
+            payload:    Vec::with_capacity(2048),
         };
 
         let now = chrono::UTC::now().format("%a, %d %b %Y, %H:%M:%S GMT").to_string();
@@ -182,7 +182,7 @@ impl Response {
     }
 
     pub fn gen_output(&self) -> Vec<u8> {
-        let mut output: Vec<u8> = Vec::new();
+        let mut output: Vec<u8> = Vec::with_capacity(self.payload.len() + 500);
         let mut inter = String::new();
 
         inter.push_str(&format!("HTTP/1.1 {} {}\r\n", self.code, self.cmsg));

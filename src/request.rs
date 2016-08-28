@@ -61,7 +61,7 @@ impl Request {
             path:    String::new(),
             headers: HashMap::new(),
             params:  HashMap::new(),
-            payload: Vec::new(),
+            payload: Vec::with_capacity(2048),
         }
     }
 
