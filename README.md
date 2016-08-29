@@ -3,9 +3,8 @@
 ## Description
 
 Canteen is the first project that I'm implementing in Rust. It's a simple clone of
-[Flask](http://flask.pocoo.org), my very favorite Python web framework. The code for
-the library is located above in the `rust-canteen` directory, and there is code for
-an example implementation in the [canteen-impl](https://github.com/jeffdn/canteen-impl)
+[Flask](http://flask.pocoo.org), my very favorite Python web framework. There is code for
+an example implementation in the [canteen-impl](https://gitlab.com/jeffdn/canteen-impl)
 repository.
 
 ## Usage
