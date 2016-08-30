@@ -1,16 +1,15 @@
-/* Copyright (c) 2016
- * Jeff Nettleton
- *
- * Licensed under the MIT license (http://opensource.org/licenses/MIT). This
- * file may not be copied, modified, or distributed except according to those
- * terms
- */
+// Copyright (c) 2016
+// Jeff Nettleton
+//
+// Licensed under the MIT license (http://opensource.org/licenses/MIT). This
+// file may not be copied, modified, or distributed except according to those
+// terms
 
 extern crate chrono;
 
 use std::collections::HashMap;
-use utils::make_response;
 
+/// A trait that converts data from the handler function to a u8 slice.
 pub trait ToOutput {
     fn to_output(&self) -> &[u8];
 }
@@ -39,6 +38,7 @@ impl ToOutput for Vec<u8> {
     }
 }
 
+/// This struct reprsents the response to an HTTP client.
 #[derive(Debug)]
 pub struct Response {
     code:       u16,
@@ -49,6 +49,7 @@ pub struct Response {
 }
 
 impl Response {
+    /// Create a new, empty Response.
     pub fn new() -> Response {
         let mut res = Response {
             code:       200,
@@ -67,6 +68,7 @@ impl Response {
         res
     }
 
+    /// Gets the HTTP message for a given code.
     pub fn get_http_message(code: u16) -> String {
         let msg = match code {
             100 => "Continue",
@@ -115,55 +117,57 @@ impl Response {
         String::from(msg)
     }
 
-    fn err_body(message: &str, path: &str) -> String {
-        format!("<html><head>\
-                 <style>body {{ font-family: helvetica, sans-serif; }} p {{ font-size: 14 }}</style>\
-                 </head><body><h3>Your request failed</h3><p>{}: {}</p></body></html>", message, path)
-    }
-
-    pub fn err_403(path: &str) -> Response {
-        make_response(Response::err_body("forbidden", path), "text/html", 403)
-    }
-
-    pub fn err_404(path: &str) -> Response {
-        make_response(Response::err_body("not found", path), "text/html", 403)
-    }
-
-    pub fn err_500(path: &str) -> Response {
-        make_response(Response::err_body("internal server error", path), "text/html", 500)
-    }
-
-    /* set the response code
-     * ex: res.set_code(200, "OK");
-     */
+    /// Sets the response code for the HTTP response.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// res.set_code(200);
+    /// ```
     pub fn set_code(&mut self, code: u16) {
         self.code = code;
         self.cmsg = Response::get_http_message(code);
     }
 
-    /* set the content type
-     * ex: res.set_content_type("text/html");
-     */
+    /// Sets the Content-Type header for the HTTP response.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// res.set_content_type("text/html");
+    /// ```
     pub fn set_content_type(&mut self, ctype: &str) {
         self.ctype = String::from(ctype);
     }
 
-    /* add an HTTP header
-     * ex: res.add_header("Connection", "close");
-     */
+    /// Adds a header to the HTTP response.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// res.add_header("Content-Type", "text/html");
+    /// ```
     pub fn add_header(&mut self, key: &str, value: &str) {
         if !self.headers.contains_key(key) {
             self.headers.insert(String::from(key), String::from(value));
         }
     }
 
-    /* add data to the payload -- can take any type that has
-     * implemented the canteen::response::ToOutput trait
-     */
+    /// Appends data to the body of the HTTP response. The trait ToOutput must
+    /// be implemented for the type passed.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let data = "{ message: \"Hello, world!\" }";
+    /// res.append(data);
+    /// ```
     pub fn append<T: ToOutput>(&mut self, payload: T) {
         self.payload.extend(payload.to_output().into_iter());
     }
 
+    /// Returns a byte array containing the full contents of the HTTP response,
+    /// for use by the Canteen struct.
     pub fn gen_output(&self) -> Vec<u8> {
         let mut output: Vec<u8> = Vec::with_capacity(self.payload.len() + 500);
         let mut inter = String::new();
