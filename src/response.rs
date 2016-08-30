@@ -121,7 +121,7 @@ impl Response {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust,ignore
     /// res.set_code(200);
     /// ```
     pub fn set_code(&mut self, code: u16) {
@@ -133,7 +133,7 @@ impl Response {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust,ignore
     /// res.set_content_type("text/html");
     /// ```
     pub fn set_content_type(&mut self, ctype: &str) {
@@ -144,7 +144,7 @@ impl Response {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust,ignore
     /// res.add_header("Content-Type", "text/html");
     /// ```
     pub fn add_header(&mut self, key: &str, value: &str) {
@@ -158,7 +158,7 @@ impl Response {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust,ignore
     /// let data = "{ message: \"Hello, world!\" }";
     /// res.append(data);
     /// ```

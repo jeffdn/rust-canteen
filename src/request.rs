@@ -80,7 +80,7 @@ impl Request {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust,ignore
     /// // Given the route "/hello/<str:name>"
     /// fn handler(req: &Request) -> Response {
     ///     make_response(format!("<b>Hello, {}!</b>", req.get("name")), "text/html", 200)

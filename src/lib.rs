@@ -43,7 +43,7 @@
 //! with decimal points
 //! - `<str:name>` will match anything inside a path segment, except a forward slash
 //!
-//! ```rust,no_run
+//! ```rust,ignore
 //! extern crate canteen;
 //!
 //! use canteen::*;
@@ -249,7 +249,7 @@ impl Canteen {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust,ignore
     /// let cnt = Canteen::new(("127.0.0.1", 8080));
     /// ```
     pub fn new<A: ToSocketAddrs>(addr: A) -> Canteen {
@@ -267,7 +267,7 @@ impl Canteen {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust,ignore
     /// fn handler(_: &Request) -> Response {
     ///     utils::make_response("<b>Hello, world!</b>", "text/html", 200)
     /// }
@@ -306,7 +306,7 @@ impl Canteen {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust,ignore
     /// let cnt = Canteen::new(("127.0.0.1", 8080));
     /// cnt.set_default(canteen::utils::err_404);
     /// ```
@@ -424,7 +424,7 @@ impl Canteen {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust,ignore
     /// let cnt = Canteen::new(("127.0.0.1", 8080));
     /// ```
     pub fn run(&mut self) {
