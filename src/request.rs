@@ -1,13 +1,13 @@
-/* Copyright (c) 2016
- * Jeff Nettleton
- *
- * Licensed under the MIT license (http://opensource.org/licenses/MIT). This
- * file may not be copied, modified, or distributed except according to those
- * terms
- */
+// Copyright (c) 2016
+// Jeff Nettleton
+//
+// Licensed under the MIT license (http://opensource.org/licenses/MIT). This
+// file may not be copied, modified, or distributed except according to those
+// terms
 
 use std::collections::HashMap;
 
+/// This enum represents the various types of HTTP requests.
 #[derive(PartialEq, Eq, Hash, Debug, Copy, Clone)]
 pub enum Method {
     Get,
@@ -17,7 +17,9 @@ pub enum Method {
     NoImpl,
 }
 
+/// A trait that allows for extracting variables from URIs.
 pub trait FromUri {
+    /// A function to parse a string into the correct type.
     fn from_uri(data: &str) -> Self;
 }
 
@@ -45,6 +47,7 @@ impl FromUri for f32 {
     }
 }
 
+/// This struct represents a request from an HTTP client.
 #[derive(Debug)]
 pub struct Request {
     pub method:  Method,
@@ -55,6 +58,7 @@ pub struct Request {
 }
 
 impl Request {
+    /// Create a new, empty Request.
     pub fn new() -> Request {
         Request {
             method:  Method::NoImpl,
@@ -65,6 +69,23 @@ impl Request {
         }
     }
 
+    /// Create a Request from an HTTP request string.
+    pub fn from_str(rqstr: &str) -> Request {
+        let mut req = Request::new();
+        req.parse(rqstr);
+        req
+    }
+
+    /// Get a variable from the URI.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// // Given the route "/hello/<str:name>"
+    /// fn handler(req: &Request) -> Response {
+    ///     make_response(format!("<b>Hello, {}!</b>", req.get("name")), "text/html", 200)
+    /// }
+    /// ```
     pub fn get<T>(&self, name: &str) -> T where T: FromUri {
         match self.params.get(name) {
             Some(item) => FromUri::from_uri(&item),
@@ -72,13 +93,7 @@ impl Request {
         }
     }
 
-    pub fn from_str(rqstr: &str) -> Request {
-        let mut req = Request::new();
-        req.parse(rqstr);
-        req
-    }
-
-    pub fn parse(&mut self, rqstr: &str) {
+    fn parse(&mut self, rqstr: &str) {
         let mut buf: Vec<&str> = rqstr.splitn(2, "\r\n").collect();
         let ask: Vec<&str> = buf[0].splitn(3, ' ').collect();
 
@@ -96,7 +111,7 @@ impl Request {
 
             if buf[0] == "" {
                 if buf.len() == 1 || buf[1] == "" {
-                    /* no payload */
+                    // no payload
                     break;
                 }
 
@@ -110,9 +125,5 @@ impl Request {
                 self.headers.insert(String::from(hdr[0]), String::from(hdr[1]));
             }
         }
-    }
-
-    pub fn has_params(&self) -> bool {
-        self.params.len() > 0
     }
 }
