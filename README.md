@@ -14,7 +14,7 @@ It's by no means complete, but I'm working on it, and it's now available on
 your Cargo.toml:
 ```toml
 [dependencies]
-canteen = "0.1"
+canteen = "0.2"
 ```
 
 ## Example
@@ -27,7 +27,7 @@ extracted to perform various operations. Currently, the following variable types
 be used:
 
 - `<path:name>` will greedily take all path data contained
-  - ex: `cnt.add_route("/static/<path:name>", &[Method::Get], Route::static_file)` will
+  - ex: `cnt.add_route("/static/<path:name>", &[Method::Get], utils::static_file)` will
   serve anything in the `/static/` directory as a file
 - `<int:name>` will return an integer from a path segment
   - ex: `cnt.add_route("/api/foo/<int:foo_id>", &[Method::Get], my_handler)` will match
@@ -40,6 +40,7 @@ with decimal points
 extern crate canteen;
 
 use canteen::*;
+use canteen::utils;
 
 fn hello_handler(req: &Request) -> Response {
     let mut res = Response::new();
@@ -56,14 +57,14 @@ fn double_handler(req: &Request) -> Response {
     let to_dbl: i32 = req.get("to_dbl");
 
     /* simpler response generation syntax */
-    make_response(format!("{}", to_dbl * 2), "text/plain", 200)
+    utils::make_response(format!("{}", to_dbl * 2), "text/plain", 200)
 }
 
 fn main() {
     let cnt = Canteen::new(("127.0.0.1", 8080));
 
     // set the default route handler to show a 404 message
-    cnt.set_default(Route::err_404);
+    cnt.set_default(utils::err_404);
 
     // respond to requests to / with "Hello, world!"
     cnt.add_route("/", &[Method::Get], hello_handler);
@@ -72,7 +73,7 @@ fn main() {
     cnt.add_route("/double/<int:to_dbl>", &[Method::Get], double_handler);
 
     // serve raw files from the /static/ directory
-    cnt.add_route("/static/<path:path>", &[Method::Get], Route::static_file);
+    cnt.add_route("/static/<path:path>", &[Method::Get], utils::static_file);
 
     cnt.run();
 }
