@@ -86,7 +86,7 @@ impl Request {
     ///     make_response(format!("<b>Hello, {}!</b>", req.get("name")), "text/html", 200)
     /// }
     /// ```
-    pub fn get<T>(&self, name: &str) -> T where T: FromUri {
+    pub fn get<T: FromUri>(&self, name: &str) -> T {
         match self.params.get(name) {
             Some(item) => FromUri::from_uri(&item),
             None       => panic!("invalid route parameter {:?}", name),
