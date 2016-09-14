@@ -16,3 +16,7 @@ exclude = [
 chrono = "0.2"
 regex = "0.1"
 mio = "0.5"
+
+[dev-dependencies.hyper]
+version = "0.9"
+default-features = false
