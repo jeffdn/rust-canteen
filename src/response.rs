@@ -211,10 +211,18 @@ mod tests {
     }
 
     #[test]
-    fn test_tooutput_trait_str() {
+    fn test_tooutput_trait_static_str() {
         let ar: [u8; 3] = [97, 98, 99];
 
-        assert_eq!(ar, ToOutput::to_output("abc"));
+        assert_eq!(ar, "abc".to_output());
+    }
+
+    #[test]
+    fn test_tooutput_trait_str() {
+        let ar: [u8; 3] = [97, 98, 99];
+        let st = "abc";
+
+        assert_eq!(ar, st.to_output());
     }
 
     #[test]
@@ -222,7 +230,7 @@ mod tests {
         let ar: [u8; 3] = [97, 98, 99];
         let st = String::from("abc");
 
-        assert_eq!(ar, ToOutput::to_output(&st));
+        assert_eq!(ar, st.to_output());
     }
 
     #[test]
@@ -230,6 +238,6 @@ mod tests {
         let ar: [u8; 5] = [1, 2, 3, 4, 5];
         let vc: Vec<u8> = vec![1, 2, 3, 4, 5];
 
-        assert_eq!(ar, ToOutput::to_output(&vc));
+        assert_eq!(ar, vc.to_output());
     }
 }
