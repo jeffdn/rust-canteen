@@ -80,10 +80,14 @@ impl Request {
     ///
     /// # Examples
     ///
-    /// ```rust,ignore
+    /// ```rust
+    /// use canteen::{Request, Response};
+    /// use canteen::utils;
+    ///
     /// // Given the route "/hello/<str:name>"
     /// fn handler(req: &Request) -> Response {
-    ///     make_response(format!("<b>Hello, {}!</b>", req.get("name")), "text/html", 200)
+    ///     let name: String = req.get("name");
+    ///     utils::make_response(format!("<b>Hello, {}!</b>", name), "text/html", 200)
     /// }
     /// ```
     pub fn get<T: FromUri>(&self, name: &str) -> T {

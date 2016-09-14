@@ -18,9 +18,12 @@ use request::Request;
 ///
 /// # Examples
 ///
-/// ```rust,ignore
+/// ```rust
+/// use canteen::{Request, Response};
+/// use canteen::utils;
+///
 /// fn handler(_: &Request) -> Response {
-///     make_response("Hello, world!", "text/plain", 200)
+///     utils::make_response("Hello, world!", "text/plain", 200)
 /// }
 /// ```
 pub fn make_response<T: ToOutput>(body: T, c_type: &str, code: u16) -> Response {

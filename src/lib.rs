@@ -43,10 +43,10 @@
 //! with decimal points
 //! - `<str:name>` will match anything inside a path segment, except a forward slash
 //!
-//! ```rust,ignore
+//! ```rust
 //! extern crate canteen;
 //!
-//! use canteen::*;
+//! use canteen::{Canteen, Request, Response, Method};
 //! use canteen::utils;
 //!
 //! fn hello_handler(req: &Request) -> Response {
@@ -68,7 +68,7 @@
 //! }
 //!
 //! fn main() {
-//!     let cnt = Canteen::new(("127.0.0.1", 8080));
+//!     let mut cnt = Canteen::new(("127.0.0.1", 8080));
 //!
 //!     // set the default route handler to show a 404 message
 //!     cnt.set_default(utils::err_404);
@@ -82,7 +82,7 @@
 //!     // serve raw files from the /static/ directory
 //!     cnt.add_route("/static/<path:path>", &[Method::Get], utils::static_file);
 //!
-//!     cnt.run();
+//!     /* cnt.run() */;
 //! }
 //! ```
 
@@ -246,8 +246,10 @@ impl Canteen {
     ///
     /// # Examples
     ///
-    /// ```rust,ignore
-    /// let cnt = Canteen::new(("127.0.0.1", 8080));
+    /// ```rust
+    /// use canteen::Canteen;
+    ///
+    /// let cnt = Canteen::new(("127.0.0.1", 8081));
     /// ```
     pub fn new<A: ToSocketAddrs>(addr: A) -> Canteen {
         Canteen {
@@ -264,14 +266,17 @@ impl Canteen {
     ///
     /// # Examples
     ///
-    /// ```rust,ignore
+    /// ```rust
+    /// use canteen::{Canteen, Request, Response, Method};
+    /// use canteen::utils;
+    ///
     /// fn handler(_: &Request) -> Response {
     ///     utils::make_response("<b>Hello, world!</b>", "text/html", 200)
     /// }
     ///
     /// fn main() {
-    ///     let cnt = Canteen::new(("127.0.0.1", 8080));
-    ///     cnt.add_route("/hello", &[Request::Get], handler);
+    ///     let mut cnt = Canteen::new(("127.0.0.1", 8082));
+    ///     cnt.add_route("/hello", &[Method::Get], handler);
     /// }
     /// ```
     pub fn add_route(&mut self, path: &str, mlist: &[Method],
@@ -303,9 +308,12 @@ impl Canteen {
     ///
     /// # Examples
     ///
-    /// ```rust,ignore
-    /// let cnt = Canteen::new(("127.0.0.1", 8080));
-    /// cnt.set_default(canteen::utils::err_404);
+    /// ```rust
+    /// use canteen::Canteen;
+    /// use canteen::utils;
+    ///
+    /// let mut cnt = Canteen::new(("127.0.0.1", 8083));
+    /// cnt.set_default(utils::err_404);
     /// ```
     pub fn set_default(&mut self, handler: fn(&Request) -> Response) {
         self.default = handler;
@@ -421,8 +429,11 @@ impl Canteen {
     ///
     /// # Examples
     ///
-    /// ```rust,ignore
-    /// let cnt = Canteen::new(("127.0.0.1", 8080));
+    /// ```rust
+    /// use canteen::Canteen;
+    ///
+    /// let cnt = Canteen::new(("127.0.0.1", 8084));
+    /// /* cnt.run(); */
     /// ```
     pub fn run(&mut self) {
         let mut evl = EventLoop::new().unwrap();

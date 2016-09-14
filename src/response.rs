@@ -69,7 +69,7 @@ impl Response {
     }
 
     /// Gets the HTTP message for a given code.
-    pub fn get_http_message(code: u16) -> String {
+    fn get_http_message(code: u16) -> String {
         let msg = match code {
             100 => "Continue",
             101 => "Switching Protocols",
@@ -121,7 +121,10 @@ impl Response {
     ///
     /// # Examples
     ///
-    /// ```rust,ignore
+    /// ```rust
+    /// use canteen::Response;
+    ///
+    /// let mut res = Response::new();
     /// res.set_code(200);
     /// ```
     pub fn set_code(&mut self, code: u16) {
@@ -133,7 +136,10 @@ impl Response {
     ///
     /// # Examples
     ///
-    /// ```rust,ignore
+    /// ```rust
+    /// use canteen::Response;
+    ///
+    /// let mut res = Response::new();
     /// res.set_content_type("text/html");
     /// ```
     pub fn set_content_type(&mut self, ctype: &str) {
@@ -144,7 +150,10 @@ impl Response {
     ///
     /// # Examples
     ///
-    /// ```rust,ignore
+    /// ```rust
+    /// use canteen::Response;
+    ///
+    /// let mut res = Response::new();
     /// res.add_header("Content-Type", "text/html");
     /// ```
     pub fn add_header(&mut self, key: &str, value: &str) {
@@ -158,7 +167,10 @@ impl Response {
     ///
     /// # Examples
     ///
-    /// ```rust,ignore
+    /// ```rust
+    /// use canteen::Response;
+    ///
+    /// let mut res = Response::new();
     /// let data = "{ message: \"Hello, world!\" }";
     /// res.append(data);
     /// ```
