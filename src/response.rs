@@ -188,3 +188,36 @@ impl Response {
         output
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_response_http_message() {
+        assert_eq!("OK", Response::get_http_message(200));
+    }
+
+    #[test]
+    fn test_tooutput_trait_str() {
+        let ar: [u8; 3] = [97, 98, 99];
+
+        assert_eq!(ar, ToOutput::to_output("abc"));
+    }
+
+    #[test]
+    fn test_tooutput_trait_string() {
+        let ar: [u8; 3] = [97, 98, 99];
+        let st = String::from("abc");
+
+        assert_eq!(ar, ToOutput::to_output(&st));
+    }
+
+    #[test]
+    fn test_tooutput_trait_vec() {
+        let ar: [u8; 5] = [1, 2, 3, 4, 5];
+        let vc: Vec<u8> = vec![1, 2, 3, 4, 5];
+
+        assert_eq!(ar, ToOutput::to_output(&vc));
+    }
+}

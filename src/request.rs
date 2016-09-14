@@ -127,3 +127,34 @@ impl Request {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_fromuri_trait_i32() {
+        let mut orig: String = String::from("1234");
+        assert_eq!(1234, FromUri::from_uri(&orig));
+
+        orig = String::from("-4321");
+        assert_eq!(-4321, FromUri::from_uri(&orig));
+    }
+
+    #[test]
+    fn test_fromuri_trait_string() {
+        let orig: String = String::from("foobar");
+        let conv: String = FromUri::from_uri(&orig);
+
+        assert_eq!("foobar", conv);
+    }
+
+    #[test]
+    fn test_fromuri_trait_float() {
+        let mut orig: String = String::from("123.45");
+        assert_eq!(123.45f32, FromUri::from_uri(&orig));
+
+        orig = String::from("-54.321");
+        assert_eq!(-54.321f32, FromUri::from_uri(&orig));
+    }
+}

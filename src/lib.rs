@@ -89,9 +89,6 @@
 extern crate mio;
 extern crate regex;
 
-#[cfg(test)]
-mod tests;
-
 pub mod utils;
 pub mod route;
 pub mod request;
