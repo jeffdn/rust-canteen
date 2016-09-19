@@ -1,10 +1,11 @@
 [package]
 name = "canteen"
-version = "0.2.3"
-authors = ["jeffdn@gmail.com"]
+version = "0.2.4"
+authors = ["Jeff Nettleton <jeffdn@gmail.com>"]
 
 description = "A Flask-like microframework for Rust"
 repository = "https://gitlab.com/jeffdn/rust-canteen"
+documentation = "https://docs.rs/canteen/"
 readme = "README.md"
 license = "MIT"
 
