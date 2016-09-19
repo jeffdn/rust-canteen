@@ -175,6 +175,19 @@ mod tests {
     }
 
     #[test]
+    fn test_route_match_single_uint() {
+        let route = Route::new("/api/v1/foo/<uint:foo_id>", Method::Get, utils::err_404);
+        let parsed = route.parse("/api/v1/foo/123");
+        let mut badreq = Request::new();
+
+        badreq.method = Method::Get;
+        badreq.path = String::from("/api/v1/foo/-123");
+
+        assert_eq!("123", parsed.get("foo_id").unwrap());
+        assert_eq!(false, route.is_match(&badreq));
+    }
+
+    #[test]
     fn test_route_match_single_str() {
         let rt = Route::new("/api/v1/foo/<str:foo_stuff>", Method::Get, utils::err_404);
         assert_eq!("blahblahblah", rt.parse("/api/v1/foo/blahblahblah").get("foo_stuff").unwrap());
