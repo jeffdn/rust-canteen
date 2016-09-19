@@ -91,10 +91,11 @@ impl Request {
     /// }
     /// ```
     pub fn get<T: FromUri>(&self, name: &str) -> T {
-        match self.params.get(name) {
-            Some(item) => FromUri::from_uri(&item),
-            None       => panic!("invalid route parameter {:?}", name),
+        if !self.params.contains_key(name) {
+            panic!("invalid route parameter {:?}", name);
         }
+
+        FromUri::from_uri(&self.params[name])
     }
 
     fn parse(&mut self, rqstr: &str) {

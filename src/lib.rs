@@ -360,7 +360,7 @@ impl Canteen {
         let mut handler: fn(&Request) -> Response = self.default;
 
         if self.rcache.contains_key(&resolved) {
-            let route = self.routes.get(self.rcache.get(&resolved).unwrap()).unwrap();
+            let ref route = self.routes[&self.rcache[&resolved]];
 
             handler = route.handler;
             req.params = route.parse(&req.path);
