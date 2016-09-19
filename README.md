@@ -1,5 +1,7 @@
 # Canteen
 
+[![Build Status](https://gitlab.com/jeffdn/rust-canteen/badges/master/build.svg)](https://gitlab.com/jeffdn/rust-canteen/pipelines) [![Latest Version](https://img.shields.io/crates/v/canteen.svg)](https://crates.io/crates/canteen)
+
 ## Description
 
 Canteen is the first project that I'm implementing in Rust. It's a simple clone of
