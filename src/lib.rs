@@ -9,20 +9,8 @@
 //!
 //! ## Description
 //!
-//! Canteen is a simple clone of [Flask](http://flask.pocoo.org), a simple but powerful Python
-//! web framework. There is code for an example implementation in the repository located
-//! here: [canteen-impl](https://gitlab.com/jeffdn/canteen-impl).
-//!
-//! ## Usage
-//!
-//! It's by no means complete, but I'm working on it, and it's now available on
-//! [crates.io](https://crates.io/)! To install and check it out, add the following to
-//! your Cargo.toml:
-//!
-//! ```toml
-//! [dependencies]
-//! canteen = "0.2"
-//! ```
+//! A pure Rust clone of [Flask](http://flask.pocoo.org), a simple but powerful Python
+//! web framework.
 //!
 //! ## Example
 //!
@@ -33,15 +21,16 @@
 //! extracted to perform various operations. Currently, the following variable types can
 //! be used:
 //!
-//! - `<path:name>` will greedily take all path data contained
-//!   - ex: `cnt.add_route("/static/<path:name>", &[Method::Get], utils::static_file)` will
-//!   serve anything in the `/static/` directory as a file
-//! - `<int:name>` will return an integer from a path segment
+//! - `<str:name>` will match anything inside a path segment, returns a `String`
+//! - `<int:name>` will return a signed integer (`i32`) from a path segment
 //!   - ex: `cnt.add_route("/api/foo/<int:foo_id>", &[Method::Get], my_handler)` will match
 //!   `"/api/foo/123"` but not `"/api/foo/123.34"` or `"/api/foo/bar"`
+//! - `<uint:name>` will return an unsigned integer (`u32`)
 //! - `<float:name>` does the same thing as the `int` parameter definition, but matches numbers
-//! with decimal points
-//! - `<str:name>` will match anything inside a path segment, except a forward slash
+//! with decimal points and returns an `f32`
+//! - `<path:name>` will greedily take all path data contained, returns a `String`
+//!   - ex: `cnt.add_route("/static/<path:name>", &[Method::Get], utils::static_file)` will
+//!   serve anything in the `/static/` directory as a file
 //!
 //! ```rust
 //! extern crate canteen;
