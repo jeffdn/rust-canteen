@@ -38,6 +38,15 @@ impl FromUri for i32 {
     }
 }
 
+impl FromUri for u32 {
+    fn from_uri(data: &str) -> u32 {
+        match data.parse::<u32>() {
+            Ok(v)  => v,
+            Err(e) => panic!("matched integer can't be parsed: {:?}", e),
+        }
+    }
+}
+
 impl FromUri for f32 {
     fn from_uri(data: &str) -> f32 {
         match data.parse::<f32>() {

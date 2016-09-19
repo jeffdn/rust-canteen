@@ -18,6 +18,7 @@ use response::*;
 #[derive(PartialEq, Eq, Hash, Debug)]
 enum ParamType {
     Integer,
+    Unsigned,
     String,
     Float,
     Path,
@@ -42,7 +43,7 @@ pub struct Route {
 impl Route {
     /// Create a new Route. This function is called by the Canteen struct.
     pub fn new(path: &str, method: Method, handler: fn(&Request) -> Response) -> Route {
-        let re = Regex::new(r"^<(?:(int|str|float|path):)?([\w_][a-zA-Z0-9_]*)>$").unwrap();
+        let re = Regex::new(r"^<(?:(int|uint|str|float|path):)?([\w_][a-zA-Z0-9_]*)>$").unwrap();
         let parts: Vec<&str> = path.split('/').filter(|&s| s != "").collect();
         let mut matcher: String = String::from(r"^");
         let mut params: HashMap<String, ParamType> = HashMap::new();
@@ -57,8 +58,10 @@ impl Route {
                         Some(x)     => {
                             match x.as_ref() {
                                 "int"   => ParamType::Integer,
+                                "uint"  => ParamType::Unsigned,
                                 "float" => ParamType::Float,
                                 "path"  => ParamType::Path,
+                                "str"   => ParamType::String,
                                 _       => ParamType::String,
 
                             }
@@ -67,10 +70,11 @@ impl Route {
                     };
 
                     let mstr: String = match ptype {
-                        ParamType::String  => String::from(r"(?:[^/])+"),
-                        ParamType::Integer => String::from(r"-*[0-9]+"),
-                        ParamType::Float   => String::from(r"-*[0-9]*[.]?[0-9]+"),
-                        ParamType::Path    => String::from(r".+"),
+                        ParamType::String   => String::from(r"(?:[^/])+"),
+                        ParamType::Integer  => String::from(r"-*[0-9]+"),
+                        ParamType::Unsigned => String::from(r"[0-9]+"),
+                        ParamType::Float    => String::from(r"-*[0-9]*[.]?[0-9]+"),
+                        ParamType::Path     => String::from(r".+"),
                     };
 
                     rc.push_str("/(?P<");
