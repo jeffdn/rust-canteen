@@ -4,7 +4,7 @@
 
 ## Description
 
-Canteen is the first project that I'm implementing in Rust. It's a simple clone of
+Canteen is the first project that I'm implementing in Rust. It's a clone of
 [Flask](http://flask.pocoo.org), my very favorite Python web framework. There is code for
 an example implementation in the [canteen-impl](https://gitlab.com/jeffdn/canteen-impl)
 repository.
@@ -28,15 +28,16 @@ syntax that lets you define variables within them; variables that can then be
 extracted to perform various operations. Currently, the following variable types can
 be used:
 
-- `<path:name>` will greedily take all path data contained
-  - ex: `cnt.add_route("/static/<path:name>", &[Method::Get], utils::static_file)` will
-  serve anything in the `/static/` directory as a file
-- `<int:name>` will return an integer from a path segment
+- `<str:name>` will match anything inside a path segment, returns a `String`
+- `<int:name>` will return a signed integer (`i32`) from a path segment
   - ex: `cnt.add_route("/api/foo/<int:foo_id>", &[Method::Get], my_handler)` will match
   `"/api/foo/123"` but not `"/api/foo/123.34"` or `"/api/foo/bar"`
+- `<uint:name>` will return an unsigned integer (`u32`)
 - `<float:name>` does the same thing as the `int` parameter definition, but matches numbers
-with decimal points
-- `<str:name>` will match anything inside a path segment, except a forward slash
+with decimal points and returns an `f32`
+- `<path:name>` will greedily take all path data contained, returns a `String`
+  - ex: `cnt.add_route("/static/<path:name>", &[Method::Get], utils::static_file)` will
+  serve anything in the `/static/` directory as a file
 
 ```rust
 extern crate canteen;
