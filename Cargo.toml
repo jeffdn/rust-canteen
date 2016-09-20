@@ -17,3 +17,10 @@ exclude = [
 chrono = "0.2"
 regex = "0.1"
 mio = "0.5"
+postgres = { version = "0.11", features = ["chrono"], optional = true }
+r2d2 = { version = "0.7", optional = true }
+r2d2_postgres = { version = "0.10", optional = true }
+
+[features]
+default = []
+pool-postgres = ["r2d2", "r2d2_postgres", "postgres"]
