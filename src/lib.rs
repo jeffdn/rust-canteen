@@ -344,7 +344,8 @@ impl Canteen {
         self.reregister(evl);
     }
 
-    fn handle_request(&mut self, req: &mut Request) -> Vec<u8> {
+    fn handle_request(&mut self, rqstr: &str) -> Vec<u8> {
+        let mut req = Request::from_str(&rqstr);
         let resolved = route::RouteDef { pathdef: req.path.clone(), method: req.method };
         let mut handler: fn(&Request) -> Response = self.default;
 
@@ -355,7 +356,7 @@ impl Canteen {
             req.params = route.parse(&req.path);
         } else {
             for (path, route) in &self.routes {
-                match (route).is_match(req) {
+                match (route).is_match(&req) {
                     true  => {
                         handler = route.handler;
                         req.params = route.parse(&req.path);
@@ -367,7 +368,7 @@ impl Canteen {
             }
         }
 
-        handler(req).gen_output()
+        handler(&req).gen_output()
     }
 
     fn readable(&mut self, evl: &mut EventLoop<Canteen>, token: Token) -> Result<bool> {
@@ -375,8 +376,7 @@ impl Canteen {
             Ok(true)    => {
                 let buf = self.get_client(token).i_buf.clone();
                 let rqstr = String::from_utf8(buf).unwrap();
-                let mut req = Request::from_str(&rqstr);
-                let output = self.handle_request(&mut req);
+                let output = self.handle_request(&rqstr);
 
                 self.get_client(token).o_buf.extend(output);
             },
