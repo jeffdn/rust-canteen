@@ -90,12 +90,12 @@ impl Request {
     /// # Examples
     ///
     /// ```rust
-    /// use canteen::{Request, Response};
+    /// use canteen::{Context, Response};
     /// use canteen::utils;
     ///
     /// // Given the route "/hello/<str:name>"
-    /// fn handler(req: &Request) -> Response {
-    ///     let name: String = req.get("name");
+    /// fn handler(ctx: &Context) -> Response {
+    ///     let name: String = ctx.request.get("name");
     ///     utils::make_response(format!("<b>Hello, {}!</b>", name), "text/html", 200)
     /// }
     /// ```

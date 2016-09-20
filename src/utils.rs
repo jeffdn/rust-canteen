@@ -11,7 +11,7 @@ use std::error::Error;
 use std::path::PathBuf;
 use std::io::prelude::*;
 use response::{ToOutput, Response};
-use request::Request;
+use context::Context;
 
 /// Convenience method for creating a response from the basic components
 /// required (a request body, content type, and response code).
@@ -19,10 +19,10 @@ use request::Request;
 /// # Examples
 ///
 /// ```rust
-/// use canteen::{Request, Response};
+/// use canteen::{Context, Response};
 /// use canteen::utils;
 ///
-/// fn handler(_: &Request) -> Response {
+/// fn handler(_: &Context) -> Response {
 ///     utils::make_response("Hello, world!", "text/plain", 200)
 /// }
 /// ```
@@ -78,26 +78,26 @@ fn err_body(message: &str, path: &str) -> String {
 }
 
 /// Default handler function for HTTP 403 errors.
-pub fn err_403(req: &Request) -> Response {
-    make_response(err_body("forbidden", &req.path), "text/html", 403)
+pub fn err_403(ctx: &Context) -> Response {
+    make_response(err_body("forbidden", &ctx.request.path), "text/html", 403)
 }
 
 /// Default handler function for HTTP 404 errors.
-pub fn err_404(req: &Request) -> Response {
-    make_response(err_body("not found", &req.path), "text/html", 404)
+pub fn err_404(ctx: &Context) -> Response {
+    make_response(err_body("not found", &ctx.request.path), "text/html", 404)
 }
 
 /// Default handler function for HTTP 500 errors.
-pub fn err_500(req: &Request) -> Response {
-    make_response(err_body("internal server error", &req.path), "text/html", 500)
+pub fn err_500(ctx: &Context) -> Response {
+    make_response(err_body("internal server error", &ctx.request.path), "text/html", 500)
 }
 
 /// Handler that sends static files relative to the current working directory.
-pub fn static_file(req: &Request) -> Response {
+pub fn static_file(ctx: &Context) -> Response {
     let mut res = Response::new();
 
     let cwd = env::current_dir().unwrap();
-    let clean = replace_escape(&req.path);
+    let clean = replace_escape(&ctx.request.path);
     let mut fpath = PathBuf::from(&cwd);
     let mut fbuf: Vec<u8> = Vec::new();
 
@@ -126,7 +126,7 @@ pub fn static_file(req: &Request) -> Response {
             }
         },
         Err(_)      => {
-            return err_404(&req);
+            return err_404(&ctx);
         }
     }
 

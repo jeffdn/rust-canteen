@@ -11,6 +11,7 @@ extern crate regex;
 use std::collections::HashMap;
 use regex::Regex;
 
+use context::*;
 use request::*;
 use response::*;
 
@@ -37,12 +38,12 @@ pub struct Route {
     matcher:     Regex,
     method:      Method,
     params:      HashMap<String, ParamType>,
-    pub handler: fn(&Request) -> Response,
+    pub handler: fn(&Context) -> Response,
 }
 
 impl Route {
     /// Create a new Route. This function is called by the Canteen struct.
-    pub fn new(path: &str, method: Method, handler: fn(&Request) -> Response) -> Route {
+    pub fn new(path: &str, method: Method, handler: fn(&Context) -> Response) -> Route {
         let re = Regex::new(r"^<(?:(int|uint|str|float|path):)?([\w_][a-zA-Z0-9_]*)>$").unwrap();
         let parts: Vec<&str> = path.split('/').filter(|&s| s != "").collect();
         let mut matcher: String = String::from(r"^");

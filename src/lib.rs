@@ -15,9 +15,9 @@
 //! ## Example
 //!
 //! The principle behind Canteen is simple -- handler functions are defined as simple
-//! Rust functions that take a `Request` and return a `Response`. Handlers are then attached
-//! to one or more routes and HTTP methods/verbs. Routes are specified using a simple
-//! syntax that lets you define variables within them; variables that can then be
+//! Rust functions that take a request `Context` and return a `Response`. Handlers are
+//! then attached to one or more routes and HTTP methods/verbs. Routes are specified using
+//! a simple syntax that lets you define variables within them; variables that can then be
 //! extracted to perform various operations. Currently, the following variable types can
 //! be used:
 //!
@@ -35,10 +35,10 @@
 //! ```rust
 //! extern crate canteen;
 //!
-//! use canteen::{Canteen, Request, Response, Method};
+//! use canteen::{Canteen, Context, Response, Method};
 //! use canteen::utils;
 //!
-//! fn hello_handler(req: &Request) -> Response {
+//! fn hello_handler(ctx: &Context) -> Response {
 //!     let mut res = Response::new();
 //!
 //!     res.set_code(200);
@@ -48,9 +48,9 @@
 //!     res
 //! }
 //!
-//! fn double_handler(req: &Request) -> Response {
+//! fn double_handler(ctx: &Context) -> Response {
 //!     let mut res = Response::new();
-//!     let to_dbl: i32 = req.get("to_dbl");
+//!     let to_dbl: i32 = ctx.request.get("to_dbl");
 //!
 //!     /* simpler response generation syntax */
 //!     utils::make_response(format!("{}", to_dbl * 2), "text/plain", 200)
@@ -82,6 +82,7 @@ pub mod utils;
 pub mod route;
 pub mod request;
 pub mod response;
+pub mod context;
 
 use std::io::Result;
 use std::io::prelude::*;
@@ -94,6 +95,7 @@ use mio::*;
 
 pub use request::*;
 pub use response::*;
+pub use context::*;
 
 struct Client {
     sock:   TcpStream,
@@ -192,7 +194,7 @@ pub struct Canteen {
     server:  TcpListener,
     token:   Token,
     conns:   Slab<Client>,
-    default: fn(&Request) -> Response,
+    default: fn(&Context) -> Response,
 }
 
 impl Handler for Canteen {
@@ -256,10 +258,10 @@ impl Canteen {
     /// # Examples
     ///
     /// ```rust
-    /// use canteen::{Canteen, Request, Response, Method};
+    /// use canteen::{Canteen, Context, Response, Method};
     /// use canteen::utils;
     ///
-    /// fn handler(_: &Request) -> Response {
+    /// fn handler(_: &Context) -> Response {
     ///     utils::make_response("<b>Hello, world!</b>", "text/html", 200)
     /// }
     ///
@@ -269,7 +271,7 @@ impl Canteen {
     /// }
     /// ```
     pub fn add_route(&mut self, path: &str, mlist: &[Method],
-                     handler: fn(&Request) -> Response) -> &mut Canteen {
+                     handler: fn(&Context) -> Response) -> &mut Canteen {
         let mut methods: HashSet<Method> = HashSet::new();
 
         // make them unique
@@ -304,7 +306,7 @@ impl Canteen {
     /// let mut cnt = Canteen::new(("127.0.0.1", 8083));
     /// cnt.set_default(utils::err_404);
     /// ```
-    pub fn set_default(&mut self, handler: fn(&Request) -> Response) {
+    pub fn set_default(&mut self, handler: fn(&Context) -> Response) {
         self.default = handler;
     }
 
@@ -344,9 +346,10 @@ impl Canteen {
         self.reregister(evl);
     }
 
-    fn handle_request(&mut self, req: &mut Request) -> Vec<u8> {
+    fn handle_request(&mut self, rqstr: &str) -> Vec<u8> {
+        let mut req = Request::from_str(rqstr);
         let resolved = route::RouteDef { pathdef: req.path.clone(), method: req.method };
-        let mut handler: fn(&Request) -> Response = self.default;
+        let mut handler: fn(&Context) -> Response = self.default;
 
         if self.rcache.contains_key(&resolved) {
             let ref route = self.routes[&self.rcache[&resolved]];
@@ -355,7 +358,7 @@ impl Canteen {
             req.params = route.parse(&req.path);
         } else {
             for (path, route) in &self.routes {
-                match (route).is_match(req) {
+                match (route).is_match(&req) {
                     true  => {
                         handler = route.handler;
                         req.params = route.parse(&req.path);
@@ -367,7 +370,9 @@ impl Canteen {
             }
         }
 
-        handler(req).gen_output()
+        let ctx = Context::new(req);
+
+        handler(&ctx).gen_output()
     }
 
     fn readable(&mut self, evl: &mut EventLoop<Canteen>, token: Token) -> Result<bool> {
@@ -375,8 +380,7 @@ impl Canteen {
             Ok(true)    => {
                 let buf = self.get_client(token).i_buf.clone();
                 let rqstr = String::from_utf8(buf).unwrap();
-                let mut req = Request::from_str(&rqstr);
-                let output = self.handle_request(&mut req);
+                let output = self.handle_request(&rqstr);
 
                 self.get_client(token).o_buf.extend(output);
             },
