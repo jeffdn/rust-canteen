@@ -82,14 +82,29 @@ pub fn err_403(req: &Request) -> Response {
     make_response(err_body("forbidden", &req.path), "text/html", 403)
 }
 
+/// Default handler function for HTTP 403 errors for XHR.
+pub fn err_403_json(message: &str) -> Response {
+    make_response(format!("{{ message: 'forbidden: {}' }}", message), "application/json", 403)
+}
+
 /// Default handler function for HTTP 404 errors.
 pub fn err_404(req: &Request) -> Response {
     make_response(err_body("not found", &req.path), "text/html", 404)
 }
 
+/// Default handler function for HTTP 500 errors for XHR.
+pub fn err_404_json(message: &str) -> Response {
+    make_response(format!("{{ message: 'not found: {}' }}", message), "application/json", 404)
+}
+
 /// Default handler function for HTTP 500 errors.
 pub fn err_500(req: &Request) -> Response {
     make_response(err_body("internal server error", &req.path), "text/html", 500)
+}
+
+/// Default handler function for HTTP 500 errors for XHR.
+pub fn err_500_json(message: &str) -> Response {
+    make_response(format!("{{ message: 'internal server error: {}' }}", message), "application/json", 500)
 }
 
 /// Handler that sends static files relative to the current working directory.
