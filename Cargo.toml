@@ -17,3 +17,8 @@ exclude = [
 chrono = "0.2"
 regex = "0.1"
 mio = "0.5"
+rustc-serialize = { version = "0.3", optional = true }
+
+[features]
+default = ["rustc-serialize"]
+no-json = []

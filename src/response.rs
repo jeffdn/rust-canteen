@@ -6,6 +6,8 @@
 // terms
 
 extern crate chrono;
+#[cfg(not(features = "no-json"))]
+extern crate rustc_serialize;
 
 use std::collections::HashMap;
 
@@ -64,6 +66,17 @@ impl Response {
         res.add_header("Connection", "close");
         res.add_header("Server", "canteen/0.0.1");
         res.add_header("Date", &now);
+
+        res
+    }
+
+    #[cfg(not(features = "no-json"))]
+    /// Creates a Response with a JSON body
+    pub fn as_json<T: rustc_serialize::Encodable>(data: &T) -> Response {
+        let mut res = Response::new();
+
+        res.set_content_type("application/json");
+        res.append(rustc_serialize::json::encode(data).unwrap());
 
         res
     }
