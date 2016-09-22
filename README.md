@@ -56,7 +56,6 @@ fn hello_handler(req: &Request) -> Response {
 }
 
 fn double_handler(req: &Request) -> Response {
-    let mut res = Response::new();
     let to_dbl: i32 = req.get("to_dbl");
 
     /* simpler response generation syntax */
