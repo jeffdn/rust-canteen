@@ -76,6 +76,8 @@
 
 extern crate mio;
 extern crate regex;
+extern crate chrono;
+extern crate rustc_serialize;
 
 pub mod utils;
 pub mod route;

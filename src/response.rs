@@ -5,10 +5,9 @@
 // file may not be copied, modified, or distributed except according to those
 // terms
 
-extern crate chrono;
-extern crate rustc_serialize;
-
 use std::collections::HashMap;
+use chrono::UTC;
+use rustc_serialize::{json, Encodable};
 
 /// A trait that converts data from the handler function to a u8 slice.
 pub trait ToOutput {
@@ -60,7 +59,7 @@ impl Response {
             payload:    Vec::with_capacity(2048),
         };
 
-        let now = chrono::UTC::now().format("%a, %d %b %Y, %H:%M:%S GMT").to_string();
+        let now = UTC::now().format("%a, %d %b %Y, %H:%M:%S GMT").to_string();
 
         res.add_header("Connection", "close");
         res.add_header("Server", "canteen/0.0.1");
@@ -70,11 +69,25 @@ impl Response {
     }
 
     /// Creates a Response with a JSON body
-    pub fn as_json<T: rustc_serialize::Encodable>(data: &T) -> Response {
+    ///
+    /// # Examples
+    ///
+    /// ```rust,ignore
+    /// use canteen::Response;
+    ///
+    /// #[derive(RustcEncodable)]
+    /// struct Foo {
+    ///     item: i32,
+    /// }
+    ///
+    /// let foo = Foo { item: 12345 };
+    /// let res = Response::as_json(&foo);
+    /// ```
+    pub fn as_json<T: Encodable>(data: &T) -> Response {
         let mut res = Response::new();
 
         res.set_content_type("application/json");
-        res.append(rustc_serialize::json::encode(data).unwrap());
+        res.append(json::encode(data).unwrap());
 
         res
     }
@@ -215,6 +228,24 @@ impl Response {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rustc_serialize::json;
+
+    #[derive(RustcEncodable)]
+    struct Foo {
+        item: i32,
+    }
+
+    #[test]
+    fn test_response_as_json() {
+        let foo = Foo { item: 12345 };
+        let res_j = Response::as_json(&foo);
+        let mut res_r = Response::new();
+
+        res_r.set_content_type("application/json");
+        res_r.append(json::encode(&foo).unwrap());
+
+        assert_eq!(res_r.gen_output(), res_j.gen_output());
+    }
 
     #[test]
     fn test_response_http_message() {
