@@ -29,7 +29,7 @@ use request::Request;
 pub fn make_response<T: ToOutput>(body: T, c_type: &str, code: u16) -> Response {
     let mut res = Response::new();
 
-    res.set_code(code);
+    res.set_status(code);
     res.set_content_type(c_type);
     res.append(body);
 
@@ -131,7 +131,7 @@ pub fn static_file(req: &Request) -> Response {
         Ok(mut f)   => {
             match f.read_to_end(&mut fbuf) {
                 Ok(_)   => {
-                    res.set_code(200);
+                    res.set_status(200);
                     res.set_content_type("text/plain");
                     res.append(fbuf);
                 },

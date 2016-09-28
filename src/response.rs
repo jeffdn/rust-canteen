@@ -149,9 +149,9 @@ impl Response {
     /// use canteen::Response;
     ///
     /// let mut res = Response::new();
-    /// res.set_code(200);
+    /// res.set_status(200);
     /// ```
-    pub fn set_code(&mut self, code: u16) {
+    pub fn set_status(&mut self, code: u16) {
         self.code = code;
         self.cmsg = Response::get_http_message(code);
     }

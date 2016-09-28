@@ -41,7 +41,7 @@
 //! fn hello_handler(req: &Request) -> Response {
 //!     let mut res = Response::new();
 //!
-//!     res.set_code(200);
+//!     res.set_status(200);
 //!     res.set_content_type("text/plain");
 //!     res.append("Hello, world!");
 //!
