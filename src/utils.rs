@@ -14,7 +14,7 @@ use response::{ToOutput, Response};
 use request::Request;
 
 /// Convenience method for creating a response from the basic components
-/// required (a request body, content type, and response code).
+/// required (a request body, content type, and response status).
 ///
 /// # Examples
 ///
@@ -26,10 +26,10 @@ use request::Request;
 ///     utils::make_response("Hello, world!", "text/plain", 200)
 /// }
 /// ```
-pub fn make_response<T: ToOutput>(body: T, c_type: &str, code: u16) -> Response {
+pub fn make_response<T: ToOutput>(body: T, c_type: &str, status: u16) -> Response {
     let mut res = Response::new();
 
-    res.set_status(code);
+    res.set_status(status);
     res.set_content_type(c_type);
     res.append(body);
 

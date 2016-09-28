@@ -41,7 +41,7 @@ impl ToOutput for Vec<u8> {
 /// This struct reprsents the response to an HTTP client.
 #[derive(Debug)]
 pub struct Response {
-    code:       u16,
+    status:     u16,
     cmsg:       String,
     ctype:      String,
     headers:    HashMap<String, String>,
@@ -52,7 +52,7 @@ impl Response {
     /// Create a new, empty Response.
     pub fn new() -> Response {
         let mut res = Response {
-            code:       200,
+            status:     200,
             cmsg:       String::from("OK"),
             ctype:      String::from("text/plain"),
             headers:    HashMap::new(),
@@ -92,9 +92,9 @@ impl Response {
         res
     }
 
-    /// Gets the HTTP message for a given code.
-    fn get_http_message(code: u16) -> String {
-        let msg = match code {
+    /// Gets the HTTP message for a given status.
+    fn get_http_message(status: u16) -> String {
+        let msg = match status {
             100 => "Continue",
             101 => "Switching Protocols",
             200 => "OK",
@@ -141,7 +141,7 @@ impl Response {
         String::from(msg)
     }
 
-    /// Sets the response code for the HTTP response.
+    /// Sets the response status for the HTTP response.
     ///
     /// # Examples
     ///
@@ -151,9 +151,9 @@ impl Response {
     /// let mut res = Response::new();
     /// res.set_status(200);
     /// ```
-    pub fn set_status(&mut self, code: u16) {
-        self.code = code;
-        self.cmsg = Response::get_http_message(code);
+    pub fn set_status(&mut self, status: u16) {
+        self.status = status;
+        self.cmsg = Response::get_http_message(status);
     }
 
     /// Sets the Content-Type header for the HTTP response.
@@ -208,7 +208,7 @@ impl Response {
         let mut output: Vec<u8> = Vec::with_capacity(self.payload.len() + 500);
         let mut inter = String::new();
 
-        inter.push_str(&format!("HTTP/1.1 {} {}\r\n", self.code, self.cmsg));
+        inter.push_str(&format!("HTTP/1.1 {} {}\r\n", self.status, self.cmsg));
 
         for (key, value) in &self.headers {
             inter.push_str(&format!("{}: {}\r\n", key, value));
