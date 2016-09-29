@@ -239,6 +239,13 @@ impl Handler for Canteen {
             }
         }
     }
+
+    fn tick(&mut self, evl: &mut EventLoop<Canteen>) {
+        if self.rcache.len() == 1 && self.conns.count() == 0 {
+            /* we've completed a request */
+            evl.shutdown();
+        }
+    }
 }
 
 impl Canteen {
@@ -437,29 +444,6 @@ impl Canteen {
     /// ```
     pub fn run(&mut self) {
         let mut evl = EventLoop::new().unwrap();
-        self.register(&mut evl).ok();
-        evl.run(self).unwrap();
-    }
-
-    fn _kill_handler(_: &Request) -> Response {
-        panic!("exiting test!");
-    }
-
-    /// Creates the listener and starts a Canteen server's event loop. Creates a
-    /// special route called `/__kill` that terminates the server. Only to be
-    /// used for integration tests.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use canteen::Canteen;
-    ///
-    /// let cnt = Canteen::new(("127.0.0.1", 8084));
-    /// /* cnt._test(); */
-    /// ```
-    pub fn _test(&mut self) {
-        let mut evl = EventLoop::new().unwrap();
-        self.add_route("/__kill", &[Method::Get, Method::Post, Method::Put], Canteen::_kill_handler);
         self.register(&mut evl).ok();
         evl.run(self).unwrap();
     }
