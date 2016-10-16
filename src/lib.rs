@@ -150,6 +150,10 @@ impl Client {
     //  - Ok(false): keep listening for writeable event and continue next time
     //  - Err(e):    something dun fucked up
     fn send(&mut self) -> Result<bool> {
+        if self.o_buf.len() == 0 {
+            return Ok(false);
+        }
+
         while self.o_buf.len() > 0 {
             match self.sock.write(&self.o_buf.as_slice()) {
                 Ok(sz)  => {
@@ -197,11 +201,12 @@ pub struct Canteen {
     token:   Token,
     conns:   Slab<Client>,
     default: fn(&Request) -> Response,
+    tpool:   ThreadPool,
 }
 
 impl Handler for Canteen {
     type Timeout = ();
-    type Message = u32;
+    type Message = (Token, Vec<u8>);
 
     fn ready(&mut self, evl: &mut EventLoop<Canteen>, token: Token, events: EventSet) {
         if events.is_error() || events.is_hup() {
@@ -232,6 +237,14 @@ impl Handler for Canteen {
             }
         }
     }
+
+    fn notify(&mut self, evl: &mut EventLoop<Canteen>, msg: (Token, Vec<u8>)) {
+        let (token, output) = msg;
+        let mut client = self.get_client(token);
+
+        client.o_buf.extend(output);
+        let _ = client.reregister(evl);
+    }
 }
 
 impl Canteen {
@@ -252,6 +265,7 @@ impl Canteen {
             token:   Token(1),
             conns:   Slab::new_starting_at(Token(2), 2048),
             default: utils::err_404,
+            tpool:   ThreadPool::new(255),
         }
     }
 
@@ -313,7 +327,10 @@ impl Canteen {
     }
 
     fn get_client<'a>(&'a mut self, token: Token) -> &'a mut Client {
-        &mut self.conns[token]
+        match self.conns.get_mut(token) {
+            None    => { panic!("it's gone!"); },
+            Some(c) => c,
+        }
     }
 
     fn accept(&mut self, evl: &mut EventLoop<Canteen>) {
@@ -348,7 +365,7 @@ impl Canteen {
         self.reregister(evl);
     }
 
-    fn handle_request(&mut self, rqstr: &str) -> Vec<u8> {
+    fn handle_request(&mut self, token: Token, tx: Sender<(Token, Vec<u8>)>, rqstr: &str) {
         let mut req = Request::from_str(&rqstr);
         let resolved = route::RouteDef { pathdef: req.path.clone(), method: req.method };
         let mut handler: fn(&Request) -> Response = self.default;
@@ -372,7 +389,9 @@ impl Canteen {
             }
         }
 
-        handler(&req).gen_output()
+        self.tpool.execute(move || {
+            let _ = tx.send((token, handler(&req).gen_output()));
+        });
     }
 
     fn readable(&mut self, evl: &mut EventLoop<Canteen>, token: Token) -> Result<bool> {
@@ -380,17 +399,13 @@ impl Canteen {
             Ok(true)    => {
                 let buf = self.get_client(token).i_buf.clone();
                 let rqstr = String::from_utf8(buf).unwrap();
-                let output = self.handle_request(&rqstr);
-
-                self.get_client(token).o_buf.extend(output);
+                self.handle_request(token, evl.channel(), &rqstr);
             },
             Ok(false)   => {},
             Err(e)      => {
                 panic!("message wasn't actually readable! <error: {:?}>", e);
             },
         };
-
-        let _ = self.get_client(token).reregister(evl);
 
         Ok(true)
     }
