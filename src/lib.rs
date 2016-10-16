@@ -327,10 +327,7 @@ impl Canteen {
     }
 
     fn get_client<'a>(&'a mut self, token: Token) -> &'a mut Client {
-        match self.conns.get_mut(token) {
-            None    => { panic!("it's gone!"); },
-            Some(c) => c,
-        }
+        &mut self.conns[token]
     }
 
     fn accept(&mut self, evl: &mut EventLoop<Canteen>) {
