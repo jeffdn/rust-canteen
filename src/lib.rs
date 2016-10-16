@@ -78,6 +78,7 @@ extern crate mio;
 extern crate regex;
 extern crate chrono;
 extern crate rustc_serialize;
+extern crate threadpool;
 
 pub mod utils;
 pub mod route;
@@ -89,6 +90,8 @@ use std::io::prelude::*;
 use std::net::ToSocketAddrs;
 use std::collections::HashMap;
 use std::collections::HashSet;
+
+use threadpool::ThreadPool;
 use mio::tcp::{TcpListener, TcpStream};
 use mio::util::Slab;
 use mio::*;
