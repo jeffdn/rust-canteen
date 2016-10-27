@@ -114,7 +114,7 @@ impl Client {
             token:  token,
             events: EventSet::hup(),
             i_buf:  Vec::with_capacity(2048),
-            o_buf:  Vec::with_capacity(2048),
+            o_buf:  Vec::new(),
         }
     }
 
@@ -242,7 +242,7 @@ impl Handler for Canteen {
         let (token, output) = msg;
         let mut client = self.get_client(token);
 
-        client.o_buf.extend(output);
+        client.o_buf = output;
         let _ = client.reregister(evl);
     }
 }
