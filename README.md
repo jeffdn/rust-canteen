@@ -16,7 +16,7 @@ It's by no means complete, but I'm working on it, and it's now available on
 your Cargo.toml:
 ```toml
 [dependencies]
-canteen = "0.2"
+canteen = "0.3"
 ```
 
 ## Example
