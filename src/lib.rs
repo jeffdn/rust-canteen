@@ -265,7 +265,7 @@ impl Canteen {
             token:   Token(1),
             conns:   Slab::new_starting_at(Token(2), 2048),
             default: utils::err_404,
-            tpool:   ThreadPool::new(16),
+            tpool:   ThreadPool::new(255),
         }
     }
 
