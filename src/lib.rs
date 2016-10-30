@@ -38,7 +38,7 @@
 //! use canteen::{Canteen, Request, Response, Method};
 //! use canteen::utils;
 //!
-//! fn hello_handler(req: &Request) -> Response {
+//! fn hello_handler(_: &Request) -> Response {
 //!     let mut res = Response::new();
 //!
 //!     res.set_status(200);
