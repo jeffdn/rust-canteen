@@ -19,8 +19,6 @@ your Cargo.toml:
 canteen = "0.3"
 ```
 
-## Example
-
 The principle behind Canteen is simple -- handler functions are defined as simple
 Rust functions that take a `Request` and return a `Response`. Handlers are then attached
 to one or more routes and HTTP methods/verbs. Routes are specified using a simple
@@ -38,6 +36,13 @@ with decimal points and returns an `f32`
 - `<path:name>` will greedily take all path data contained, returns a `String`
   - ex: `cnt.add_route("/static/<path:name>", &[Method::Get], utils::static_file)` will
   serve anything in the `/static/` directory as a file
+
+After the handlers are attached to routes, the next step is to simply start the
+server. Any time a request is received, it is dispatched with the associated handler
+to a threadpool worker. The worker notifies the parent process when it's finished,
+and then the response is transmitted back to the client. Pretty straightforward stuff!
+
+## Example
 
 ```rust
 extern crate canteen;
