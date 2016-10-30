@@ -111,7 +111,7 @@ impl Client {
             token:  token,
             events: EventSet::hup(),
             i_buf:  Vec::with_capacity(2048),
-            o_buf:  Vec::with_capacity(2048),
+            o_buf:  Vec::new(),
         }
     }
 
@@ -377,9 +377,7 @@ impl Canteen {
             Ok(true)    => {
                 let buf = self.get_client(token).i_buf.clone();
                 let rqstr = String::from_utf8(buf).unwrap();
-                let output = self.handle_request(&rqstr);
-
-                self.get_client(token).o_buf.extend(output);
+                self.get_client(token).o_buf = self.handle_request(&rqstr);
             },
             Ok(false)   => {},
             Err(e)      => {
