@@ -6,7 +6,7 @@
 // terms
 
 use std::collections::HashMap;
-use rustc_serialize::json;
+use rustc_serialize::{json, Decodable};
 
 /// This enum represents the various types of HTTP requests.
 #[derive(PartialEq, Eq, Hash, Debug, Copy, Clone)]
@@ -138,6 +138,29 @@ impl Request {
         }
     }
 
+    /// Get a composed JSON payload from the request.
+    ///
+    /// # Examples
+    ///
+    /// ```rust,ignore
+    /// use canteen::{Request, Response};
+    ///
+    /// #[derive(RustcDecodable)]
+    /// struct Foo {
+    ///     item: i32,
+    /// }
+    ///
+    /// // Given the POST route "/hello"
+    /// fn handler(req: &Request) -> Response {
+    ///     let data: Foo = req.get_json_obj();
+    ///     utils::make_response(format!("We got: {}!", data.item), "text/html", 200)
+    /// }
+    /// ```
+    pub fn get_json_obj<T: Decodable>(&self) -> Result<T, json::DecoderError> {
+        let data = String::from_utf8(self.payload.clone()).unwrap();
+        json::decode(&data)
+    }
+
     fn parse(&mut self, rqstr: &str) {
         let mut buf: Vec<&str> = rqstr.splitn(2, "\r\n").collect();
         let ask: Vec<&str> = buf[0].splitn(3, ' ').collect();
@@ -176,6 +199,11 @@ impl Request {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[derive(RustcDecodable)]
+    struct Foo {
+        item: i32,
+    }
 
     #[test]
     fn test_fromuri_trait_i32() {
@@ -218,16 +246,26 @@ mod tests {
     #[test]
     fn test_get_json() {
         let mut req = Request::new();
-        req.payload.extend_from_slice("{ \"foo\": 123 }".as_bytes());
+        req.payload.extend_from_slice("{ \"item\": 123 }".as_bytes());
 
         let data = req.get_json().unwrap();
 
         assert_eq!(true, data.is_object());
 
         let obj = data.as_object().unwrap();
-        let val = obj.get("foo").unwrap();
+        let val = obj.get("item").unwrap();
 
         assert_eq!(true, val.is_u64());
         assert_eq!(123u64, val.as_u64().unwrap());
+    }
+
+    #[test]
+    fn test_get_json_obj() {
+        let mut req = Request::new();
+        req.payload.extend_from_slice("{ \"item\": 123 }".as_bytes());
+
+        let data: Foo = req.get_json_obj().unwrap();
+
+        assert_eq!(123, data.item);
     }
 }
