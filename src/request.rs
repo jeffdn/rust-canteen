@@ -6,6 +6,7 @@
 // terms
 
 use std::collections::HashMap;
+use rustc_serialize::json;
 
 /// This enum represents the various types of HTTP requests.
 #[derive(PartialEq, Eq, Hash, Debug, Copy, Clone)]
@@ -107,6 +108,36 @@ impl Request {
         FromUri::from_uri(&self.params[name])
     }
 
+    /// Get a raw JSON payload from the request.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use canteen::{Request, Response};
+    /// use canteen::utils;
+    ///
+    /// // Given the POST route "/hello"
+    /// fn handler(req: &Request) -> Response {
+    ///     let data = req.get_json();
+    ///
+    ///     match data {
+    ///         Some(val) => utils::make_response(format!("We got: {}", val), "text/plain", 200),
+    ///         None      => utils::make_response("We got nothing :(", "text/plain", 200),
+    ///     }
+    /// }
+    /// ```
+    pub fn get_json(&self) -> Option<json::Json> {
+        match String::from_utf8(self.payload.clone()) {
+            Err(_)      => None,
+            Ok(payload) => {
+                match json::Json::from_str(&payload) {
+                    Ok(data)    => Some(data),
+                    Err(_)      => None,
+                }
+            }
+        }
+    }
+
     fn parse(&mut self, rqstr: &str) {
         let mut buf: Vec<&str> = rqstr.splitn(2, "\r\n").collect();
         let ask: Vec<&str> = buf[0].splitn(3, ' ').collect();
@@ -174,5 +205,29 @@ mod tests {
 
         let neg = String::from("-54.321");
         assert_eq!(-54.321f32, FromUri::from_uri(&neg));
+    }
+
+    #[test]
+    fn test_get_fromuri_i32() {
+        let mut req = Request::new();
+        req.params.insert(String::from("test"), String::from("1234"));
+
+        assert_eq!(1234, req.get("test"));
+    }
+
+    #[test]
+    fn test_get_json() {
+        let mut req = Request::new();
+        req.payload.extend_from_slice("{ \"foo\": 123 }".as_bytes());
+
+        let data = req.get_json().unwrap();
+
+        assert_eq!(true, data.is_object());
+
+        let obj = data.as_object().unwrap();
+        let val = obj.get("foo").unwrap();
+
+        assert_eq!(true, val.is_u64());
+        assert_eq!(123u64, val.as_u64().unwrap());
     }
 }
