@@ -153,7 +153,11 @@ impl Request {
     /// // Given the POST route "/hello"
     /// fn handler(req: &Request) -> Response {
     ///     let data: Foo = req.get_json_obj();
-    ///     utils::make_response(format!("We got: {}!", data.item), "text/html", 200)
+    ///
+    ///     match data {
+    ///         Ok(foo) => utils::make_response(format!("We got: {}!", data.item), "text/plain", 200),
+    ///         Err(_)  => utils::make_response("We got nothing :(", "text/plain", 200),
+    ///     }
     /// }
     /// ```
     pub fn get_json_obj<T: Decodable>(&self) -> Result<T, json::DecoderError> {
