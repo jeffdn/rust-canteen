@@ -344,8 +344,8 @@ pub fn static_file(req: &Request) -> Response {
                     res.set_content_type("text/plain");
                     res.append(fbuf);
                 },
-                Err(e)  => {
-                    return make_response(err_body("internal server error", e.description()), "text/html", 500);
+                Err(_)  => {
+                    return err_500(&req);
                 },
             }
         },
