@@ -9,6 +9,8 @@ use std::collections::HashMap;
 use chrono::UTC;
 use rustc_serialize::{json, Encodable};
 
+const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+
 /// A trait that converts data from the handler function to a u8 slice.
 pub trait ToOutput {
     fn to_output(&self) -> &[u8];
@@ -62,7 +64,7 @@ impl Response {
         let now = UTC::now().format("%a, %d %b %Y, %H:%M:%S %Z").to_string();
 
         res.add_header("Connection", "close");
-        res.add_header("Server", "canteen/0.0.1");
+        res.add_header("Server", &format!("canteen/{}", VERSION));
         res.add_header("Date", &now);
 
         res
