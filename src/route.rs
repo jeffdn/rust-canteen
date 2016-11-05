@@ -112,14 +112,11 @@ impl Route {
     pub fn parse(&self, path: &str) -> HashMap<String, String> {
         let mut params: HashMap<String, String> = HashMap::new();
 
-        match self.matcher.is_match(&path) {
-            true  => {
-                let caps = self.matcher.captures(path).unwrap();
-                for (param, _) in &self.params {
-                    params.insert(param.clone(), String::from(caps.name(&param).unwrap()));
-                }
-            },
-            false => {},
+        if self.matcher.is_match(&path) {
+            let caps = self.matcher.captures(path).unwrap();
+            for (param, _) in &self.params {
+                params.insert(param.clone(), String::from(caps.name(&param).unwrap()));
+            }
         }
 
         params

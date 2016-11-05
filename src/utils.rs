@@ -318,22 +318,14 @@ pub fn static_file(req: &Request) -> Response {
                 }
             };
 
-            match req.get_header("If-Modified-Since") {
-                Some(hdr)   => {
-                    let ims = UTC.datetime_from_str(&hdr, "%a, %d %b %Y, %H:%M:%S UTC");
-
-                    match ims {
-                        Err(_)      => {}, // flow through
-                        Ok(dt_utc)  => {
-                            if dt_utc >= last {
-                                // it hasn't been modified, return a 304
-                                res.set_status(304);
-                                return res;
-                            }
-                        },
+            if let Some(hdr) = req.get_header("If-Modified-Since") {
+                if let Ok(dt_utc) = UTC.datetime_from_str(&hdr, "%a, %d %b %Y, %H:%M:%S UTC") {
+                    if dt_utc >= last {
+                        // it hasn't been modified, return a 304
+                        res.set_status(304);
+                        return res;
                     }
-                },
-                None        => {}, // flow through
+                }
             }
 
             match f.read_to_end(&mut fbuf) {
