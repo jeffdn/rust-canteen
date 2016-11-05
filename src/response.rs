@@ -59,7 +59,7 @@ impl Response {
             payload:    Vec::with_capacity(2048),
         };
 
-        let now = UTC::now().format("%a, %d %b %Y, %H:%M:%S GMT").to_string();
+        let now = UTC::now().format("%a, %d %b %Y, %H:%M:%S %Z").to_string();
 
         res.add_header("Connection", "close");
         res.add_header("Server", "canteen/0.0.1");

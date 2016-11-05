@@ -284,6 +284,8 @@ pub fn static_file(req: &Request) -> Response {
         Ok(mut f)   => {
             match f.read_to_end(&mut fbuf) {
                 Ok(_)   => {
+
+                    res.add_header("Last-Modified", &last.format("%a, %d %b %Y, %H:%M:%S %Z").to_string());
                     res.set_status(200);
                     res.set_content_type("text/plain");
                     res.append(fbuf);
