@@ -86,6 +86,33 @@ impl Request {
         req
     }
 
+    /// Get an HTTP header contained in the Request.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use canteen::{Request, Response};
+    /// use canteen::utils;
+    ///
+    /// // Given the route "/hello"
+    /// fn handler(req: &Request) -> Response {
+    ///     let browser = req.get_header("User-Agent");
+    ///
+    ///     match browser {
+    ///         Some(ua) => utils::make_response(format!("You're using {}!", ua), "text/plain", 200),
+    ///         None     => utils::make_response("Bad browser, no user agent!", "text/plain", 200),
+    ///     }
+    /// }
+    /// ```
+    pub fn get_header(&self, name: &str) -> Option<String> {
+        let key = String::from(name);
+
+        match self.headers.get(&key) {
+            Some(val)   => Some(val.clone()),
+            None        => None,
+        }
+    }
+
     /// Get a variable from the URI.
     ///
     /// # Examples
