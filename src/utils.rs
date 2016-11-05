@@ -7,9 +7,10 @@
 
 use std::env;
 use std::fs::File;
-use std::error::Error;
 use std::path::PathBuf;
 use std::io::prelude::*;
+use chrono::{UTC, DateTime, TimeZone};
+use std::time::{UNIX_EPOCH, SystemTime};
 use response::{ToOutput, Response};
 use request::Request;
 
@@ -34,6 +35,27 @@ pub fn make_response<T: ToOutput>(body: T, c_type: &str, status: u16) -> Respons
     res.append(body);
 
     res
+}
+
+/// Converts std::time::SystemTime to chrono::DateTime<UTC>
+///
+/// Code from: https://users.rust-lang.org/t/convert-std-time-systemtime-to-chrono-datetime-datetime/7684/4
+fn _conv_systemtime(t: SystemTime) -> DateTime<UTC> {
+    let (sec, nsec) = match t.duration_since(UNIX_EPOCH) {
+        Ok(dur) => (dur.as_secs() as i64, dur.subsec_nanos()),
+        Err(e) => {
+            let dur = e.duration();
+            let (sec, nsec) = (dur.as_secs() as i64, dur.subsec_nanos());
+
+            if nsec == 0 {
+                (-sec, 0)
+            } else {
+                (-sec - 1, 1_000_000_000 - nsec)
+            }
+        },
+    };
+
+    UTC.timestamp(sec, nsec)
 }
 
 /// Replace the URI escape codes with their ASCII equivalents.
@@ -282,6 +304,34 @@ pub fn static_file(req: &Request) -> Response {
 
     match file {
         Ok(mut f)   => {
+            let last = match f.metadata() {
+                Err(_)  => UTC::now(),
+                Ok(md)  => {
+                    match md.modified() {
+                        Err(_)  => UTC::now(), // should never happen...
+                        Ok(st)  => _conv_systemtime(st),
+                    }
+                }
+            };
+
+            match req.get_header("If-Modified-Since") {
+                Some(hdr)   => {
+                    let ims = UTC.datetime_from_str(&hdr, "%a, %d %b %Y, %H:%M:%S UTC");
+
+                    match ims {
+                        Err(_)      => {}, // flow through
+                        Ok(dt_utc)  => {
+                            if dt_utc >= last {
+                                // it hasn't been modified, return a 304
+                                res.set_status(304);
+                                return res;
+                            }
+                        },
+                    }
+                },
+                None        => {}, // flow through
+            }
+
             match f.read_to_end(&mut fbuf) {
                 Ok(_)   => {
 
