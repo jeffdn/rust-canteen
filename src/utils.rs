@@ -239,6 +239,10 @@ pub fn replace_escape(path: &str) -> String {
         ("%FF", "ÿ"),
     ];
 
+    if !fixed.contains("%") {
+        return fixed;
+    }
+
     for &(from, to) in replaces.iter() {
         fixed = fixed.replace(from, to);
     }
