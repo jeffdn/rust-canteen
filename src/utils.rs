@@ -40,7 +40,7 @@ pub fn make_response<T: ToOutput>(body: T, c_type: &str, status: u16) -> Respons
 /// Converts std::time::SystemTime to chrono::DateTime<UTC>
 ///
 /// Code from: https://users.rust-lang.org/t/convert-std-time-systemtime-to-chrono-datetime-datetime/7684/4
-fn _conv_systemtime(t: SystemTime) -> DateTime<UTC> {
+pub fn _conv_systemtime(t: SystemTime) -> DateTime<UTC> {
     let (sec, nsec) = match t.duration_since(UNIX_EPOCH) {
         Ok(dur) => (dur.as_secs() as i64, dur.subsec_nanos()),
         Err(e) => {
@@ -211,10 +211,17 @@ pub fn static_file(req: &Request) -> Response {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use chrono::{UTC, TimeZone};
+    use std::time::UNIX_EPOCH;
 
     #[test]
     fn test_replace_escape() {
         let path = "%61%62%63%64%65%66%67%68%69%6A%6B%6C%6D%6E%6F%70%71%72%73%74%75%76%77%78%79%7A";
         assert_eq!("abcdefghijklmnopqrstuvwxyz", replace_escape(&path));
+    }
+
+    #[test]
+    fn test_conv_systemtime() {
+        assert_eq!(_conv_systemtime(UNIX_EPOCH), UTC.timestamp(0, 0));
     }
 }
