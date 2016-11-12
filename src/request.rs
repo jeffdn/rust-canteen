@@ -5,6 +5,7 @@
 // file may not be copied, modified, or distributed except according to those
 // terms
 
+use std;
 use std::collections::HashMap;
 use rustc_serialize::{json, Decodable};
 
@@ -16,6 +17,32 @@ pub enum Method {
     Post,
     Delete,
     NoImpl,
+}
+
+/// This enum represents the errors that might be encountered.
+#[derive(Debug)]
+pub enum RequestError {
+    JsonObjError(json::BuilderError),
+    JsonStrError(json::DecoderError),
+    StrCopyError(std::string::FromUtf8Error),
+}
+
+impl From<json::BuilderError> for RequestError {
+    fn from(err: json::BuilderError) -> RequestError {
+        RequestError::JsonObjError(err)
+    }
+}
+
+impl From<json::DecoderError> for RequestError {
+    fn from(err: json::DecoderError) -> RequestError {
+        RequestError::JsonStrError(err)
+    }
+}
+
+impl From<std::string::FromUtf8Error> for RequestError {
+    fn from(err: std::string::FromUtf8Error) -> RequestError {
+        RequestError::StrCopyError(err)
+    }
 }
 
 /// A trait that allows for extracting variables from URIs.
@@ -148,21 +175,16 @@ impl Request {
     ///     let data = req.get_json();
     ///
     ///     match data {
-    ///         Some(val) => utils::make_response(format!("We got: {}", val), "text/plain", 200),
-    ///         None      => utils::make_response("We got nothing :(", "text/plain", 200),
+    ///         Ok(val) => utils::make_response(format!("We got: {}", val), "text/plain", 200),
+    ///         Err(_)  => utils::make_response("We got nothing :(", "text/plain", 200),
     ///     }
     /// }
     /// ```
-    pub fn get_json(&self) -> Option<json::Json> {
-        match String::from_utf8(self.payload.clone()) {
-            Err(_)      => None,
-            Ok(payload) => {
-                match json::Json::from_str(&payload) {
-                    Ok(data)    => Some(data),
-                    Err(_)      => None,
-                }
-            }
-        }
+    pub fn get_json(&self) -> Result<json::Json, RequestError> {
+        let payload = String::from_utf8(self.payload.clone())?;
+        let data = json::Json::from_str(&payload)?;
+
+        Ok(data)
     }
 
     /// Get a composed JSON payload from the request.
@@ -187,9 +209,11 @@ impl Request {
     ///     }
     /// }
     /// ```
-    pub fn get_json_obj<T: Decodable>(&self) -> Result<T, json::DecoderError> {
-        let data = String::from_utf8(self.payload.clone()).unwrap();
-        json::decode(&data)
+    pub fn get_json_obj<T: Decodable>(&self) -> Result<T, RequestError> {
+        let payload = String::from_utf8(self.payload.clone())?;
+        let data = json::decode(&payload)?;
+
+        Ok(data)
     }
 
     fn parse(&mut self, rqstr: &str) {
