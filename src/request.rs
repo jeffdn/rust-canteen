@@ -59,28 +59,19 @@ impl FromUri for String {
 
 impl FromUri for i32 {
     fn from_uri(data: &str) -> i32 {
-        match data.parse::<i32>() {
-            Ok(v)  => v,
-            Err(e) => panic!("matched integer can't be parsed: {:?}", e),
-        }
+        data.parse::<i32>().expect("matched integer can't be parsed")
     }
 }
 
 impl FromUri for u32 {
     fn from_uri(data: &str) -> u32 {
-        match data.parse::<u32>() {
-            Ok(v)  => v,
-            Err(e) => panic!("matched integer can't be parsed: {:?}", e),
-        }
+        data.parse::<u32>().expect("matched integer can't be parsed")
     }
 }
 
 impl FromUri for f32 {
     fn from_uri(data: &str) -> f32 {
-        match data.parse::<f32>() {
-            Ok(v)  => v,
-            Err(e) => panic!("matched float can't be parsed: {:?}", e),
-        }
+        data.parse::<f32>().expect("matched float can't be parsed")
     }
 }
 
