@@ -172,8 +172,8 @@ impl Request {
     /// }
     /// ```
     pub fn get_json(&self) -> Result<json::Json, RequestError> {
-        let payload = try!(String::from_utf8(self.payload.clone()));
-        let data = try!(json::Json::from_str(&payload));
+        let payload = String::from_utf8(self.payload.clone())?;
+        let data = json::Json::from_str(&payload)?;
 
         Ok(data)
     }
@@ -201,8 +201,8 @@ impl Request {
     /// }
     /// ```
     pub fn get_json_obj<T: Decodable>(&self) -> Result<T, RequestError> {
-        let payload = try!(String::from_utf8(self.payload.clone()));
-        let data = try!(json::decode(&payload));
+        let payload = String::from_utf8(self.payload.clone())?;
+        let data = json::decode(&payload)?;
 
         Ok(data)
     }
