@@ -326,32 +326,12 @@ impl Canteen {
     }
 
     fn accept(&mut self, evl: &mut EventLoop<Canteen>) {
-        let (sock, _) = match self.server.accept() {
-            Ok(s)   => {
-                match s {
-                    Some(sock)  => sock,
-                    None        => {
-                        panic!("failed to accept new connection!");
-                    }
+        if let Ok(s) = self.server.accept() {
+            if let Some((sock, _)) = s {
+                if let Some(token) = self.conns.insert_with(|token| Client::new(sock, token)) {
+                    self.get_client(token).register(evl).ok();
                 }
-            },
-            Err(e)  => {
-                panic!("failed to accept new connection! <error: {:?}>", e);
-            },
-        };
-
-        match self.conns.insert_with(|token| Client::new(sock, token)) {
-            Some(token) => {
-                match self.get_client(token).register(evl) {
-                    Ok(_)   => {},
-                    Err(e)  => {
-                        panic!("failed to register client! <token: {:?}> <error: {:?}>", token, e);
-                    },
-                }
-            },
-            None        => {
-                panic!("failed to add client connection!");
-            },
+            }
         }
 
         self.reregister(evl);
