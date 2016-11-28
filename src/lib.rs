@@ -140,8 +140,8 @@ impl Client {
                     },
                 }
             },
-            Err(e)  => {
-                panic!("failed to read from socket! <token: {:?}> <error: {:?}>", self.token, e);
+            Err(_)  => {
+                return Ok(false);
             },
         }
 
@@ -171,8 +171,8 @@ impl Client {
                         self.o_buf = self.o_buf.split_off(sz);
                     }
                 },
-                Err(e)  => {
-                    panic!("failed to write to socket! <token: {:?}> <error: {:?}>", self.token, e);
+                Err(_)  => {
+                    return Ok(true);
                 }
             }
         }
@@ -182,18 +182,11 @@ impl Client {
 
     fn register(&mut self, evl: &mut EventLoop<Canteen>) -> Result<()> {
         self.events.insert(EventSet::readable());
-
         evl.register(&self.sock, self.token, self.events, PollOpt::edge() | PollOpt::oneshot())
-           .or_else(|e| {
-               panic!("failed to register client! <token: {:?}> <error: {:?}>", self.token, e);
-           })
     }
 
     fn reregister(&mut self, evl: &mut EventLoop<Canteen>) -> Result<()> {
         evl.reregister(&self.sock, self.token, self.events, PollOpt::edge() | PollOpt::oneshot())
-           .or_else(|e| {
-               panic!("failed to re-register client! <token: {:?}> <error: {:?}>", self.token, e);
-           })
     }
 }
 
@@ -225,10 +218,7 @@ impl Handler for Canteen {
             } else {
                 self.readable(evl, token)
                     .and_then(|_| self.get_client(token)
-                                      .reregister(evl))
-                    .unwrap_or_else(|e| {
-                        panic!("read event failed! <token: {:?}> <error: {:?}>", token, e);
-                    });
+                                      .reregister(evl)).ok();
             }
 
             return;
@@ -238,7 +228,7 @@ impl Handler for Canteen {
             match self.get_client(token).send() {
                 Ok(true)    => { self.reset_connection(token); },
                 Ok(false)   => { let _ = self.get_client(token).reregister(evl); },
-                Err(_)      => { panic!("something really bad happened!"); },
+                Err(_)      => {},
             }
         }
     }
@@ -403,10 +393,7 @@ impl Canteen {
                 let rqstr = String::from_utf8(buf).unwrap();
                 self.handle_request(token, evl.channel(), &rqstr);
             },
-            Ok(false)   => {},
-            Err(e)      => {
-                panic!("message wasn't actually readable! <error: {:?}>", e);
-            },
+            _           => {},
         };
 
         Ok(true)
@@ -419,20 +406,12 @@ impl Canteen {
 
     fn register(&mut self, evl: &mut EventLoop<Canteen>) -> Result<()> {
         evl.register(&self.server, self.token, EventSet::readable(), PollOpt::edge() | PollOpt::oneshot())
-           .or_else(|e| {
-               panic!("failed to register server! <token: {:?}> <error: {:?}>", self.token, e);
-           })
     }
 
     fn reregister(&mut self, evl: &mut EventLoop<Canteen>) {
-        match evl.reregister(&self.server, self.token,
+        evl.reregister(&self.server, self.token,
                              EventSet::readable(),
-                             PollOpt::edge() | PollOpt::oneshot()) {
-            Ok(_)   => {},
-            Err(e)  => {
-               panic!("failed to register server! <token: {:?}> <error: {:?}>", self.token, e);
-           }
-        };
+                             PollOpt::edge() | PollOpt::oneshot()).ok();
     }
 
     /// Creates the listener and starts a Canteen server's event loop.
