@@ -51,7 +51,6 @@ impl Route {
         for part in parts {
             let chunk: String = match re.is_match(part) {
                 true  => {
-                    let mut rc = String::new();
                     let caps = re.captures(part).unwrap();
                     let param = caps.at(2).unwrap().clone();
                     let ptype: ParamType = match caps.at(1) {
@@ -77,14 +76,9 @@ impl Route {
                         ParamType::Path     => String::from(r".+"),
                     };
 
-                    rc.push_str("/(?P<");
-                    rc.push_str(&param);
-                    rc.push_str(">");
-                    rc.push_str(&mstr);
-                    rc.push_str(")");
                     params.insert(String::from(param), ptype);
 
-                    rc
+                    format!("/(?P<{}>{})", &param, &mstr)
                 },
                 false => String::from("/") + part,
             };
