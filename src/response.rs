@@ -5,7 +5,7 @@
 // file may not be copied, modified, or distributed except according to those
 // terms
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use chrono::UTC;
 use rustc_serialize::{json, Encodable};
 
@@ -46,7 +46,7 @@ pub struct Response {
     status:     u16,
     cmsg:       String,
     ctype:      String,
-    headers:    HashMap<String, String>,
+    headers:    BTreeMap<String, String>,
     payload:    Vec<u8>,
 }
 
@@ -57,7 +57,7 @@ impl Response {
             status:     200,
             cmsg:       String::from("OK"),
             ctype:      String::from("text/plain"),
-            headers:    HashMap::new(),
+            headers:    BTreeMap::new(),
             payload:    Vec::with_capacity(2048),
         };
 
