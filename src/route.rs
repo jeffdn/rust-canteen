@@ -120,7 +120,6 @@ impl Route {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use request::*;
     use utils;
 
     #[test]

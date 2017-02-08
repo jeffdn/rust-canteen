@@ -144,8 +144,6 @@ impl Client {
                 return Ok(false);
             },
         }
-
-        Ok(false)
     }
 
     // write the client's output buffer to the socket.
