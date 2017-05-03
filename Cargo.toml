@@ -15,7 +15,7 @@ exclude = [
 
 [dependencies]
 chrono = "0.3"
-regex = "0.1"
+regex = "0.2"
 mio = "0.5"
 rustc-serialize = "0.3"
 threadpool = "1.0"

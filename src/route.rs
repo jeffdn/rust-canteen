@@ -52,10 +52,10 @@ impl Route {
             let chunk: String = match re.is_match(part) {
                 true  => {
                     let caps = re.captures(part).unwrap();
-                    let param = caps.at(2).unwrap().clone();
-                    let ptype: ParamType = match caps.at(1) {
+                    let param = caps.get(2).unwrap().as_str();
+                    let ptype: ParamType = match caps.get(1) {
                         Some(x)     => {
-                            match x.as_ref() {
+                            match x.as_str() {
                                 "int"   => ParamType::Integer,
                                 "uint"  => ParamType::Unsigned,
                                 "float" => ParamType::Float,
@@ -109,7 +109,7 @@ impl Route {
         if self.matcher.is_match(&path) {
             let caps = self.matcher.captures(path).unwrap();
             for (param, _) in &self.params {
-                params.insert(param.clone(), String::from(caps.name(&param).unwrap()));
+                params.insert(param.clone(), String::from(caps.name(&param).unwrap().as_str()));
             }
         }
 
