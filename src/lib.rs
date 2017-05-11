@@ -82,13 +82,18 @@
 extern crate mio;
 extern crate regex;
 extern crate chrono;
-extern crate rustc_serialize;
+extern crate serde;
+extern crate serde_json;
 extern crate threadpool;
 
 pub mod utils;
 pub mod route;
 pub mod request;
 pub mod response;
+
+//#[cfg(test)]
+//#[macro_use]
+//extern crate serde_derive;
 
 use std::io::Result;
 use std::io::prelude::*;
