@@ -1,6 +1,6 @@
 [package]
 name = "canteen"
-version = "0.3.7"
+version = "0.4.0"
 authors = ["Jeff Nettleton <jeffdn@gmail.com>"]
 
 description = "A Flask-like microframework for Rust"
