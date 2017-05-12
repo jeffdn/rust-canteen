@@ -242,10 +242,10 @@ impl Request {
 mod tests {
     use super::*;
 
-    //#[derive(Deserialize)]
-    //struct Foo {
-    //    item: i32,
-    //}
+    #[derive(Deserialize)]
+    struct Foo {
+        item: i32,
+    }
 
     #[test]
     fn test_fromuri_trait_i32() {
@@ -302,13 +302,13 @@ mod tests {
         assert_eq!(123u64, val.as_u64().unwrap());
     }
 
-    //#[test]
-    //fn test_get_json_obj() {
-    //    let mut req = Request::new();
-    //    req.payload.extend_from_slice("{ \"item\": 123 }".as_bytes());
+    #[test]
+    fn test_get_json_obj() {
+        let mut req = Request::new();
+        req.payload.extend_from_slice("{ \"item\": 123 }".as_bytes());
 
-    //    let data: Foo = req.get_json_obj().unwrap();
+        let data: Foo = req.get_json_obj().unwrap();
 
-    //    assert_eq!(123, data.item);
-    //}
+        assert_eq!(123, data.item);
+    }
 }

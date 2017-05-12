@@ -91,9 +91,9 @@ pub mod route;
 pub mod request;
 pub mod response;
 
-//#[cfg(test)]
-//#[macro_use]
-//extern crate serde_derive;
+#[cfg(test)]
+#[macro_use]
+extern crate serde_derive;
 
 use std::io::Result;
 use std::io::prelude::*;

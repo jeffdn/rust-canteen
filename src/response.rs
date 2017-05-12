@@ -233,22 +233,22 @@ impl Response {
 mod tests {
     use super::*;
 
-    //#[derive(Serialize)]
-    //struct Foo {
-    //    item: i32,
-    //}
+    #[derive(Serialize)]
+    struct Foo {
+        item: i32,
+    }
 
-    //#[test]
-    //fn test_response_as_json() {
-    //    let foo = Foo { item: 12345 };
-    //    let res_j = Response::to_string(&foo);
-    //    let mut res_r = Response::new();
+    #[test]
+    fn test_response_as_json() {
+        let foo = Foo { item: 12345 };
+        let res_j = Response::as_json(&foo);
+        let mut res_r = Response::new();
 
-    //    res_r.set_content_type("application/json");
-    //    res_r.append(serde_json::to_string(&foo).unwrap());
+        res_r.set_content_type("application/json");
+        res_r.append(serde_json::to_string(&foo).unwrap());
 
-    //    assert_eq!(res_r.gen_output(), res_j.gen_output());
-    //}
+        assert_eq!(res_r.gen_output(), res_j.gen_output());
+    }
 
     #[test]
     fn test_response_http_message() {
