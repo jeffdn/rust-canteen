@@ -17,7 +17,7 @@ your Cargo.toml:
 
 ```toml
 [dependencies]
-canteen = "0.3"
+canteen = "0.4"
 ```
 
 The principle behind Canteen is simple -- handler functions are defined as simple
