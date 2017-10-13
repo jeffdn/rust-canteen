@@ -238,7 +238,7 @@ impl Handler for Canteen {
 
     fn notify(&mut self, evl: &mut EventLoop<Canteen>, msg: (Token, Vec<u8>)) {
         let (token, output) = msg;
-        let mut client = self.get_client(token);
+        let client = self.get_client(token);
 
         client.o_buf = output;
         let _ = client.reregister(evl);
