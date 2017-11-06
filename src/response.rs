@@ -6,7 +6,7 @@
 // terms
 
 use std::collections::BTreeMap;
-use chrono::UTC;
+use chrono::Utc;
 use serde_json;
 use serde::Serialize;
 
@@ -62,7 +62,7 @@ impl Response {
             payload:    Vec::with_capacity(2048),
         };
 
-        let now = UTC::now().format("%a, %d %b %Y, %H:%M:%S %Z").to_string();
+        let now = Utc::now().format("%a, %d %b %Y, %H:%M:%S %Z").to_string();
 
         res.add_header("Connection", "close");
         res.add_header("Server", &format!("canteen/{}", VERSION));

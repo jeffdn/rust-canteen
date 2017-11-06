@@ -14,7 +14,7 @@ exclude = [
 ]
 
 [dependencies]
-chrono = "0.3"
+chrono = "0.4"
 regex = "0.2"
 mio = "0.5"
 serde = "1.0"

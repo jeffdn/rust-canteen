@@ -9,7 +9,7 @@ use std::env;
 use std::fs::File;
 use std::path::PathBuf;
 use std::io::prelude::*;
-use chrono::{UTC, DateTime, TimeZone};
+use chrono::{Utc, DateTime, TimeZone};
 use std::time::{UNIX_EPOCH, SystemTime};
 use response::{ToOutput, Response};
 use request::Request;
@@ -37,10 +37,10 @@ pub fn make_response<T: ToOutput>(body: T, c_type: &str, status: u16) -> Respons
     res
 }
 
-/// Converts std::time::SystemTime to chrono::DateTime<UTC>
+/// Converts std::time::SystemTime to chrono::DateTime<Utc>
 ///
 /// Code from: https://users.rust-lang.org/t/convert-std-time-systemtime-to-chrono-datetime-datetime/7684/4
-pub fn _conv_systemtime(t: SystemTime) -> DateTime<UTC> {
+pub fn _conv_systemtime(t: SystemTime) -> DateTime<Utc> {
     let (sec, nsec) = match t.duration_since(UNIX_EPOCH) {
         Ok(dur) => (dur.as_secs() as i64, dur.subsec_nanos()),
         Err(e) => {
@@ -55,7 +55,7 @@ pub fn _conv_systemtime(t: SystemTime) -> DateTime<UTC> {
         },
     };
 
-    UTC.timestamp(sec, nsec)
+    Utc.timestamp(sec, nsec)
 }
 
 /// Replace the URI escape codes with their ASCII equivalents.
@@ -169,17 +169,17 @@ pub fn static_file(req: &Request) -> Response {
     match file {
         Ok(mut f)   => {
             let last = match f.metadata() {
-                Err(_)  => UTC::now(),
+                Err(_)  => Utc::now(),
                 Ok(md)  => {
                     match md.modified() {
-                        Err(_)  => UTC::now(), // should never happen...
+                        Err(_)  => Utc::now(), // should never happen...
                         Ok(st)  => _conv_systemtime(st),
                     }
                 }
             };
 
             if let Some(hdr) = req.get_header("If-Modified-Since") {
-                if let Ok(dt_utc) = UTC.datetime_from_str(&hdr, "%a, %d %b %Y, %H:%M:%S UTC") {
+                if let Ok(dt_utc) = Utc.datetime_from_str(&hdr, "%a, %d %b %Y, %H:%M:%S UTC") {
                     if dt_utc >= last {
                         // it hasn't been modified, return a 304
                         res.set_status(304);
@@ -211,7 +211,7 @@ pub fn static_file(req: &Request) -> Response {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::{UTC, TimeZone};
+    use chrono::{Utc, TimeZone};
     use std::time::UNIX_EPOCH;
 
     #[test]
@@ -222,6 +222,6 @@ mod tests {
 
     #[test]
     fn test_conv_systemtime() {
-        assert_eq!(_conv_systemtime(UNIX_EPOCH), UTC.timestamp(0, 0));
+        assert_eq!(_conv_systemtime(UNIX_EPOCH), Utc.timestamp(0, 0));
     }
 }
