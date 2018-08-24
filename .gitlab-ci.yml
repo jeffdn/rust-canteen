@@ -1,5 +1,5 @@
 # use Rust stable
-image: "scorpil/rust:stable"
+image: 'rust:latest'
 
 # install a C compiler
 before_script:
@@ -9,5 +9,6 @@ before_script:
 # run tests via Cargo
 test:cargo:
   script:
-  - rustc --version && cargo --version
-  - cargo test --verbose --jobs 1 --release
+  - rustc --version
+  - cargo --version
+  - cargo test --verbose
