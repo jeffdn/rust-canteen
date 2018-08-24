@@ -61,7 +61,10 @@
 //! }
 //!
 //! fn main() {
-//!     let mut cnt = Canteen::new(("127.0.0.1", 8080));
+//!     let mut cnt = Canteen::new();
+//!
+//!     // bind to an address
+//!     cnt.bind(("127.0.0.1", 8080));
 //!
 //!     // set the default route handler to show a 404 message
 //!     cnt.set_default(utils::err_404);
@@ -198,7 +201,7 @@ impl Client {
 pub struct Canteen {
     routes:  HashMap<route::RouteDef, route::Route>,
     rcache:  HashMap<route::RouteDef, route::RouteDef>,
-    server:  TcpListener,
+    server:  Option<TcpListener>,
     token:   Token,
     conns:   Slab<Client>,
     default: fn(&Request) -> Response,
@@ -217,7 +220,9 @@ impl Handler for Canteen {
 
         if events.is_readable() {
             if self.token == token {
-                self.accept(evl);
+                let sock = self.accept().unwrap();
+                self.create_client(evl, sock);
+                self.reregister(evl);
             } else {
                 self.readable(evl, token)
                     .and_then(|_| self.get_client(token)
@@ -253,19 +258,32 @@ impl Canteen {
     /// ```rust
     /// use canteen::Canteen;
     ///
-    /// let cnt = Canteen::new(("127.0.0.1", 8081));
+    /// let cnt = Canteen::new();
     /// ```
-    pub fn new<A: ToSocketAddrs>(addr: A) -> Canteen {
+    pub fn new() -> Canteen {
         Canteen {
             routes:  HashMap::new(),
             rcache:  HashMap::new(),
-            server:  TcpListener::bind(&addr.to_socket_addrs().unwrap().next().unwrap()).unwrap(),
+            server:  None,
             token:   Token(1),
             conns:   Slab::new_starting_at(Token(2), 2048),
             default: utils::err_404,
             tpool:   ThreadPool::new(255),
         }
     }
+
+    /// Bind to an address on which to listen for connections
+    /// # Examples
+    /// ```rust,ignore
+    /// use canteen::Canteen;
+    ///
+    /// let mut cnt = Canteen::new();
+    /// cnt.bind(("127.0.0.1", 8080));
+    /// ```
+    pub fn bind<A: ToSocketAddrs>(&mut self, addr: A) {
+        self.server = Some(TcpListener::bind(&addr.to_socket_addrs().unwrap().next().unwrap()).unwrap());
+    }
+
 
     /// Adds a new route definition to be handled by Canteen.
     ///
@@ -280,7 +298,7 @@ impl Canteen {
     /// }
     ///
     /// fn main() {
-    ///     let mut cnt = Canteen::new(("127.0.0.1", 8082));
+    ///     let mut cnt = Canteen::new();
     ///     cnt.add_route("/hello", &[Method::Get], handler);
     /// }
     /// ```
@@ -317,27 +335,33 @@ impl Canteen {
     /// use canteen::Canteen;
     /// use canteen::utils;
     ///
-    /// let mut cnt = Canteen::new(("127.0.0.1", 8083));
+    /// let mut cnt = Canteen::new();
     /// cnt.set_default(utils::err_404);
     /// ```
     pub fn set_default(&mut self, handler: fn(&Request) -> Response) {
         self.default = handler;
     }
 
-    fn get_client<'a>(&'a mut self, token: Token) -> &'a mut Client {
-        &mut self.conns[token]
+    fn get_client(&mut self, token: Token) -> &mut Client {
+        self.conns.get_mut(token).unwrap()
     }
 
-    fn accept(&mut self, evl: &mut EventLoop<Canteen>) {
-        if let Ok(s) = self.server.accept() {
-            if let Some((sock, _)) = s {
-                if let Some(token) = self.conns.insert_with(|token| Client::new(sock, token)) {
-                    self.get_client(token).register(evl).ok();
+    fn accept(&mut self) -> Result<TcpStream> {
+        if let Some(ref server) = self.server {
+            if let Ok(s) = server.accept() {
+                if let Some((sock, _)) = s {
+                    return Ok(sock);
                 }
             }
         }
 
-        self.reregister(evl);
+        Err(std::io::Error::new(std::io::ErrorKind::ConnectionAborted, format!("booo")))
+    }
+
+    fn create_client(&mut self, evl: &mut EventLoop<Canteen>, sock: TcpStream) {
+        if let Some(token) = self.conns.insert_with(|token| Client::new(sock, token)) {
+            self.get_client(token).register(evl).ok();
+        }
     }
 
     fn handle_request(&mut self, token: Token, tx: Sender<(Token, Vec<u8>)>, rqstr: &str) {
@@ -388,13 +412,19 @@ impl Canteen {
     }
 
     fn register(&mut self, evl: &mut EventLoop<Canteen>) -> Result<()> {
-        evl.register(&self.server, self.token, EventSet::readable(), PollOpt::edge() | PollOpt::oneshot())
+        if let Some(ref server) = self.server {
+            return evl.register(server, self.token, EventSet::readable(), PollOpt::edge() | PollOpt::oneshot());
+        }
+
+        Ok(())
     }
 
     fn reregister(&mut self, evl: &mut EventLoop<Canteen>) {
-        evl.reregister(&self.server, self.token,
-                             EventSet::readable(),
-                             PollOpt::edge() | PollOpt::oneshot()).ok();
+        if let Some(ref server) = self.server {
+            evl.reregister(server, self.token,
+                                 EventSet::readable(),
+                                 PollOpt::edge() | PollOpt::oneshot()).ok();
+        }
     }
 
     /// Creates the listener and starts a Canteen server's event loop.
@@ -404,12 +434,18 @@ impl Canteen {
     /// ```rust
     /// use canteen::Canteen;
     ///
-    /// let cnt = Canteen::new(("127.0.0.1", 8084));
-    /// /* cnt.run(); */
+    /// let mut cnt = Canteen::new();
+    /// cnt.run();
     /// ```
     pub fn run(&mut self) {
         let mut evl = EventLoop::new().unwrap();
-        self.register(&mut evl).ok();
-        evl.run(self).unwrap();
+
+        match self.server {
+            None    => println!("server not bound to an address!"),
+            Some(_) => {
+                self.register(&mut evl).ok();
+                evl.run(self).unwrap();
+            },
+        };
     }
 }
