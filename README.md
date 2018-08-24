@@ -69,7 +69,10 @@ fn double_handler(req: &Request) -> Response {
 }
 
 fn main() {
-    let cnt = Canteen::new(("127.0.0.1", 8080));
+    let cnt = Canteen::new();
+
+    // bind to the listening address
+    cnt.bind(("127.0.0.1", 8080));
 
     // set the default route handler to show a 404 message
     cnt.set_default(utils::err_404);
