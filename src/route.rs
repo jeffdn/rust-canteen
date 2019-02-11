@@ -123,29 +123,24 @@ mod tests {
     use utils;
 
     #[test]
-    fn test_route_match_fail() {
+    fn test_route_match() {
         let rt = Route::new("/api/v1/foo/<int:foo_id>", Method::Get, utils::err_404);
         let mut req = Request::new();
+        let cases = vec![
+            (String::from("/api/v1/bar"),      Method::Get,  false),
+            (String::from("/api/v1/foo"),      Method::Post, false),
+            (String::from("/api/v1/foo/asdf"), Method::Get,  false),
+            (String::from("/api/va/foo/1.23"), Method::Get,  false),
+            (String::from("/api/v1/foo/123"),  Method::Post, false),
+            (String::from("/api/v1/foo/123"),  Method::Get,  true),
+        ];
 
-        req.path = String::from("/api/v1/bar");
-        req.method = Method::Get;
+        for (path, method, success) in cases.into_iter() {
+            req.path = path;
+            req.method = method;
 
-        assert_eq!(false, rt.is_match(&req));
-
-        req.path = String::from("/api/v1/foo");
-        req.method = Method::Post;
-
-        assert_eq!(false, rt.is_match(&req));
-
-        req.path = String::from("/api/v1/foo/asdf");
-        req.method = Method::Get;
-
-        assert_eq!(false, rt.is_match(&req));
-
-        req.path = String::from("/api/v1/foo/123");
-        req.method = Method::Get;
-
-        assert_eq!(true, rt.is_match(&req));
+            assert_eq!(success, rt.is_match(&req));
+        }
     }
 
     #[test]
