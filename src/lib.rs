@@ -221,7 +221,11 @@ impl Handler for Canteen {
         if events.is_readable() {
             if self.token == token {
                 let sock = self.accept().unwrap();
-                self.create_client(evl, sock);
+
+                if let Some(token) = self.conns.insert_with(|token| Client::new(sock, token)) {
+                    self.get_client(token).register(evl).ok();
+                }
+
                 self.reregister(evl);
             } else {
                 self.readable(evl, token)
@@ -313,8 +317,8 @@ impl Canteen {
 
         for m in methods {
             let rd = route::RouteDef {
-                pathdef:    String::from(path),
-                method:     m,
+                pathdef: String::from(path),
+                method:  m,
             };
 
             if self.routes.contains_key(&rd) {
@@ -338,8 +342,10 @@ impl Canteen {
     /// let mut cnt = Canteen::new();
     /// cnt.set_default(utils::err_404);
     /// ```
-    pub fn set_default(&mut self, handler: fn(&Request) -> Response) {
+    pub fn set_default(&mut self, handler: fn(&Request) -> Response) -> &mut Canteen {
         self.default = handler;
+
+        self
     }
 
     fn get_client(&mut self, token: Token) -> &mut Client {
@@ -355,19 +361,19 @@ impl Canteen {
             }
         }
 
-        Err(std::io::Error::new(std::io::ErrorKind::ConnectionAborted, format!("booo")))
-    }
-
-    fn create_client(&mut self, evl: &mut EventLoop<Canteen>, sock: TcpStream) {
-        if let Some(token) = self.conns.insert_with(|token| Client::new(sock, token)) {
-            self.get_client(token).register(evl).ok();
-        }
+        Err(std::io::Error::new(
+            std::io::ErrorKind::ConnectionAborted,
+            format!("connection aborted prematurely")
+        ))
     }
 
     fn handle_request(&mut self, token: Token, tx: Sender<(Token, Vec<u8>)>, rqstr: &str) {
         let mut req = Request::from_str(&rqstr);
-        let resolved = route::RouteDef { pathdef: req.path.clone(), method: req.method };
         let mut handler: fn(&Request) -> Response = self.default;
+        let resolved = route::RouteDef {
+            pathdef: req.path.clone(),
+            method:  req.method,
+        };
 
         if self.rcache.contains_key(&resolved) {
             let ref route = self.routes[&self.rcache[&resolved]];
@@ -376,14 +382,11 @@ impl Canteen {
             req.params = route.parse(&req.path);
         } else {
             for (path, route) in &self.routes {
-                match (route).is_match(&req) {
-                    true  => {
-                        handler = route.handler;
-                        req.params = route.parse(&req.path);
-                        self.rcache.insert(resolved, (*path).clone());
-                        break;
-                    },
-                    false => continue,
+                if route.is_match(&req) {
+                    handler = route.handler;
+                    req.params = route.parse(&req.path);
+                    self.rcache.insert(resolved, (*path).clone());
+                    break;
                 }
             }
         }
@@ -394,14 +397,14 @@ impl Canteen {
     }
 
     fn readable(&mut self, evl: &mut EventLoop<Canteen>, token: Token) -> Result<bool> {
-        match self.get_client(token).receive() {
-            Ok(true)    => {
-                let buf = self.get_client(token).i_buf.clone();
-                let rqstr = String::from_utf8(buf).unwrap();
+        if let Ok(true) = self.get_client(token).receive() {
+            let buf = self.get_client(token).i_buf.clone();
+            if let Ok(rqstr) = String::from_utf8(buf) {
                 self.handle_request(token, evl.channel(), &rqstr);
-            },
-            _           => {},
-        };
+            } else {
+                return Ok(false);
+            }
+        }
 
         Ok(true)
     }
@@ -438,7 +441,10 @@ impl Canteen {
     /// cnt.run();
     /// ```
     pub fn run(&mut self) {
-        let mut evl = EventLoop::new().unwrap();
+        let mut evl = match EventLoop::new() {
+            Ok(event_loop)  => event_loop,
+            Err(_)          => panic!("unable to initiate event loop"),
+        };
 
         match self.server {
             None    => println!("server not bound to an address!"),
