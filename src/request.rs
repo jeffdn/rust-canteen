@@ -23,6 +23,7 @@ pub enum Method {
 /// This enum represents the errors that might be encountered.
 #[derive(Debug)]
 pub enum RequestError {
+    ParseError(String),
     JsonObjError(serde_json::Error),
     JsonStrError(serde_json::Error),
     StrCopyError(std::string::FromUtf8Error),
@@ -90,13 +91,6 @@ impl Request {
             params:  HashMap::new(),
             payload: Vec::with_capacity(2048),
         }
-    }
-
-    /// Create a Request from an HTTP request string.
-    pub fn from_str(rqstr: &str) -> Request {
-        let mut req = Request::new();
-        req.parse(rqstr);
-        req
     }
 
     /// Get an HTTP header contained in the Request.
@@ -235,6 +229,17 @@ impl Request {
                 self.headers.insert(String::from(hdr[0]), String::from(hdr[1]));
             }
         }
+    }
+}
+
+impl std::str::FromStr for Request {
+    type Err = RequestError;
+
+    /// Create a Request from an HTTP request string.
+    fn from_str(rqstr: &str) -> Result<Self, Self::Err> {
+        let mut req = Request::new();
+        req.parse(rqstr);
+        Ok(req)
     }
 }
 

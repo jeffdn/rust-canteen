@@ -98,6 +98,7 @@ pub mod response;
 #[macro_use]
 extern crate serde_derive;
 
+use std::str::FromStr;
 use std::io::Result;
 use std::io::prelude::*;
 use std::net::ToSocketAddrs;
@@ -123,8 +124,8 @@ struct Client {
 impl Client {
     fn new(sock: TcpStream, token: Token) -> Client {
         Client {
-            sock:   sock,
-            token:  token,
+            sock,
+            token,
             events: EventSet::hup(),
             i_buf:  Vec::with_capacity(2048),
             o_buf:  Vec::new(),
@@ -141,15 +142,15 @@ impl Client {
                         self.events.remove(EventSet::readable());
                         self.events.insert(EventSet::writable());
                         self.i_buf.extend(buf);
-                        return Ok(true);
+                        Ok(true)
                     },
                     None    => {
-                        return Ok(false);
+                        Ok(false)
                     },
                 }
             },
             Err(_)  => {
-                return Ok(false);
+                Ok(false)
             },
         }
     }
@@ -161,11 +162,11 @@ impl Client {
     //  - Ok(false): keep listening for writeable event and continue next time
     //  - Err(e):    something dun fucked up
     fn send(&mut self) -> Result<bool> {
-        if self.o_buf.len() == 0 {
+        if self.o_buf.is_empty() {
             return Ok(false);
         }
 
-        while self.o_buf.len() > 0 {
+        while !self.o_buf.is_empty() {
             match self.sock.write(&self.o_buf.as_slice()) {
                 Ok(sz)  => {
                     if sz == self.o_buf.len() {
@@ -363,12 +364,12 @@ impl Canteen {
 
         Err(std::io::Error::new(
             std::io::ErrorKind::ConnectionAborted,
-            format!("connection aborted prematurely")
+            "connection aborted prematurely".to_string()
         ))
     }
 
     fn handle_request(&mut self, token: Token, tx: Sender<(Token, Vec<u8>)>, rqstr: &str) {
-        let mut req = Request::from_str(&rqstr);
+        let mut req = Request::from_str(&rqstr).unwrap();
         let mut handler: fn(&Request) -> Response = self.default;
         let resolved = route::RouteDef {
             pathdef: req.path.clone(),
@@ -376,7 +377,7 @@ impl Canteen {
         };
 
         if self.rcache.contains_key(&resolved) {
-            let ref route = self.routes[&self.rcache[&resolved]];
+            let route = &self.routes[&self.rcache[&resolved]];
 
             handler = route.handler;
             req.params = route.parse(&req.path);

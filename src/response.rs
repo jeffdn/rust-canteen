@@ -10,7 +10,7 @@ use chrono::Utc;
 use serde_json;
 use serde::Serialize;
 
-const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// A trait that converts data from the handler function to a u8 slice.
 pub trait ToOutput {
@@ -203,7 +203,7 @@ impl Response {
     /// res.append(data);
     /// ```
     pub fn append<T: ToOutput>(&mut self, payload: T) {
-        self.payload.extend(payload.to_output().into_iter());
+        self.payload.extend(payload.to_output().iter());
     }
 
     /// Returns a byte array containing the full contents of the HTTP response,

@@ -49,38 +49,37 @@ impl Route {
         let mut params: HashMap<String, ParamType> = HashMap::new();
 
         for part in parts {
-            let chunk: String = match re.is_match(part) {
-                true  => {
-                    let caps = re.captures(part).unwrap();
-                    let param = caps.get(2).unwrap().as_str();
-                    let ptype: ParamType = match caps.get(1) {
-                        Some(x)     => {
-                            match x.as_str() {
-                                "int"   => ParamType::Integer,
-                                "uint"  => ParamType::Unsigned,
-                                "float" => ParamType::Float,
-                                "path"  => ParamType::Path,
-                                "str"   => ParamType::String,
-                                _       => ParamType::String,
+            let chunk: String = if re.is_match(part) {
+                let caps = re.captures(part).unwrap();
+                let param = caps.get(2).unwrap().as_str();
+                let ptype: ParamType = match caps.get(1) {
+                    Some(x)     => {
+                        match x.as_str() {
+                            "int"   => ParamType::Integer,
+                            "uint"  => ParamType::Unsigned,
+                            "float" => ParamType::Float,
+                            "path"  => ParamType::Path,
+                            "str"   => ParamType::String,
+                            _       => ParamType::String,
 
-                            }
                         }
-                        None        => ParamType::String,
-                    };
+                    }
+                    None        => ParamType::String,
+                };
 
-                    let mstr: String = match ptype {
-                        ParamType::String   => String::from(r"(?:[^/])+"),
-                        ParamType::Integer  => String::from(r"-*[0-9]+"),
-                        ParamType::Unsigned => String::from(r"[0-9]+"),
-                        ParamType::Float    => String::from(r"-*[0-9]*[.]?[0-9]+"),
-                        ParamType::Path     => String::from(r".+"),
-                    };
+                let mstr: String = match ptype {
+                    ParamType::String   => String::from(r"(?:[^/])+"),
+                    ParamType::Integer  => String::from(r"-*[0-9]+"),
+                    ParamType::Unsigned => String::from(r"[0-9]+"),
+                    ParamType::Float    => String::from(r"-*[0-9]*[.]?[0-9]+"),
+                    ParamType::Path     => String::from(r".+"),
+                };
 
-                    params.insert(String::from(param), ptype);
+                params.insert(String::from(param), ptype);
 
-                    format!("/(?P<{}>{})", &param, &mstr)
-                },
-                false => String::from("/") + part,
+                format!("/(?P<{}>{})", &param, &mstr)
+            } else {
+                String::from("/") + part
             };
 
             matcher.push_str(&chunk);
@@ -91,9 +90,9 @@ impl Route {
 
         Route {
             matcher: Regex::new(&matcher).unwrap(),
-            params:  params,
-            method:  method,
-            handler: handler,
+            params,
+            method,
+            handler,
         }
     }
 
@@ -108,7 +107,7 @@ impl Route {
 
         if self.matcher.is_match(&path) {
             let caps = self.matcher.captures(path).unwrap();
-            for (param, _) in &self.params {
+            for param in self.params.keys() {
                 params.insert(param.clone(), String::from(caps.name(&param).unwrap().as_str()));
             }
         }

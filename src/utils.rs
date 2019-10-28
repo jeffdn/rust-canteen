@@ -99,7 +99,7 @@ pub fn replace_escape(path: &str) -> String {
         ("%FB", "û"),  ("%FC", "ü"),  ("%FD", "ý"),  ("%FE", "þ"),  ("%FF", "ÿ"),
     ];
 
-    if !fixed.contains("%") {
+    if !fixed.contains('%') {
         return fixed;
     }
 
