@@ -11,8 +11,8 @@ use std::path::PathBuf;
 use std::io::prelude::*;
 use chrono::{Utc, DateTime, TimeZone};
 use std::time::{UNIX_EPOCH, SystemTime};
-use response::{ToOutput, Response};
-use request::Request;
+use crate::response::{ToOutput, Response};
+use crate::request::Request;
 
 /// Convenience method for creating a response from the basic components
 /// required (a request body, content type, and response status).

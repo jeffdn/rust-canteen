@@ -82,13 +82,6 @@
 //! }
 //! ```
 
-extern crate mio;
-extern crate regex;
-extern crate chrono;
-extern crate serde;
-extern crate serde_json;
-extern crate threadpool;
-
 pub mod utils;
 pub mod route;
 pub mod request;
@@ -110,8 +103,8 @@ use mio::tcp::{TcpListener, TcpStream};
 use mio::util::Slab;
 use mio::*;
 
-pub use request::*;
-pub use response::*;
+pub use crate::request::*;
+pub use crate::response::*;
 
 struct Client {
     sock:   TcpStream,

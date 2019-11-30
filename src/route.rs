@@ -11,8 +11,8 @@ extern crate regex;
 use std::collections::HashMap;
 use regex::Regex;
 
-use request::*;
-use response::*;
+use crate::request::*;
+use crate::response::*;
 
 // The various types of parameters that can be contained in a URI.
 #[derive(PartialEq, Eq, Hash, Debug)]
@@ -119,7 +119,7 @@ impl Route {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use utils;
+    use crate::utils;
 
     #[test]
     fn test_route_match() {
