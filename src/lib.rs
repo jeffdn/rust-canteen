@@ -449,3 +449,9 @@ impl Canteen {
         };
     }
 }
+
+impl Default for Canteen {
+    fn default() -> Self {
+        Canteen::new()
+    }
+}

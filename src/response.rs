@@ -42,7 +42,7 @@ impl ToOutput for Vec<u8> {
 }
 
 /// This struct reprsents the response to an HTTP client.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Response {
     status:     u16,
     cmsg:       String,

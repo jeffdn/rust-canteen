@@ -232,6 +232,12 @@ impl Request {
     }
 }
 
+impl Default for Request {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl std::str::FromStr for Request {
     type Err = RequestError;
 
