@@ -10,6 +10,7 @@ use std::fs::File;
 use std::path::PathBuf;
 use std::io::prelude::*;
 use chrono::{Utc, DateTime, TimeZone};
+use mime_guess::MimeGuess;
 use std::time::{UNIX_EPOCH, SystemTime};
 use crate::response::{ToOutput, Response};
 use crate::request::Request;
@@ -192,7 +193,12 @@ pub fn static_file(req: &Request) -> Response {
                 Ok(_)   => {
                     res.add_header("Last-Modified", &last.format("%a, %d %b %Y, %H:%M:%S %Z").to_string());
                     res.set_status(200);
-                    res.set_content_type("text/plain");
+
+                    match MimeGuess::from_path(&fpath).first_raw() {
+                        Some(ftype) => res.set_content_type(ftype),
+                        None        => res.set_content_type("text/plain"),
+                    };
+
                     res.append(fbuf);
                 },
                 Err(_)  => {
