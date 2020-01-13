@@ -1,6 +1,6 @@
 # Canteen
 
-[![Build Status](https://gitlab.com/jeffdn/rust-canteen/badges/master/build.svg)](https://gitlab.com/jeffdn/rust-canteen/pipelines) [![Latest Version](https://img.shields.io/crates/v/canteen.svg)](https://crates.io/crates/canteen)
+[![Build Status](https://gitlab.com/jeffdn/rust-canteen/badges/master/pipeline.svg)](https://gitlab.com/jeffdn/rust-canteen/pipelines) [![Latest Version](https://img.shields.io/crates/v/canteen.svg)](https://crates.io/crates/canteen)
 
 ## Description
 
