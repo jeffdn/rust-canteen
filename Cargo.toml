@@ -1,6 +1,6 @@
 [package]
 name = "canteen"
-version = "0.5.4"
+version = "0.5.5"
 authors = ["Jeff Nettleton <jeffdn@gmail.com>"]
 edition = "2018"
 

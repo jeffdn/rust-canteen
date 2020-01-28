@@ -126,26 +126,33 @@ impl Client {
     }
 
     fn receive(&mut self) -> Result<bool> {
-        let mut buf: Vec<u8> = Vec::with_capacity(2048);
+        let mut bytes_read: usize = 0;
 
-        match self.sock.try_read_buf(&mut buf) {
-            Ok(size)  => {
-                match size {
-                    Some(_) => {
-                        self.events.remove(EventSet::readable());
-                        self.events.insert(EventSet::writable());
-                        self.i_buf.extend(buf);
-                        Ok(true)
-                    },
-                    None    => {
-                        Ok(false)
-                    },
-                }
-            },
-            Err(_)  => {
-                Ok(false)
-            },
+        loop {
+            let mut buf: Vec<u8> = Vec::with_capacity(2048);
+            match self.sock.try_read_buf(&mut buf) {
+                Ok(size)  => {
+                    match size {
+                        Some(bytes) => {
+                            self.i_buf.extend(buf);
+                            bytes_read += bytes;
+                        },
+                        None    => {
+                            self.events.remove(EventSet::readable());
+                            self.events.insert(EventSet::writable());
+                            break;
+                        },
+                    }
+                },
+                Err(_)  => {
+                    self.events.remove(EventSet::readable());
+                    self.events.insert(EventSet::writable());
+                    break;
+                },
+            };
         }
+
+        Ok(bytes_read > 0)
     }
 
     // write the client's output buffer to the socket.
