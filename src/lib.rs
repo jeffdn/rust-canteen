@@ -64,7 +64,7 @@
 //!     let mut cnt = Canteen::new();
 //!
 //!     // bind to an address
-//!     cnt.bind(("127.0.0.1", 8080));
+//!     cnt.bind(("127.0.0.1", 8888));
 //!
 //!     // set the default route handler to show a 404 message
 //!     cnt.set_default(utils::err_404);
@@ -77,8 +77,6 @@
 //!
 //!     // serve raw files from the /static/ directory
 //!     cnt.add_route("/static/<path:path>", &[Method::Get], utils::static_file);
-//!
-//!     /* cnt.run() */;
 //! }
 //! ```
 
