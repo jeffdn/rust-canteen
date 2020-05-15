@@ -39,6 +39,24 @@ impl From<std::string::FromUtf8Error> for RequestError {
     }
 }
 
+impl std::fmt::Display for RequestError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            RequestError::JsonStrError(err) => write!(f, "JSON error: {}", err),
+            RequestError::StrCopyError(err) => write!(f, "UTF-8 error: {}", err),
+        }
+    }
+}
+
+impl std::error::Error for RequestError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            RequestError::JsonStrError(err) => Some(err),
+            RequestError::StrCopyError(err) => Some(err),
+        }
+    }
+}
+
 /// A trait that allows for extracting variables from URIs.
 pub trait FromUri {
     /// A function to parse a string into the correct type.
