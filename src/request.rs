@@ -23,8 +23,6 @@ pub enum Method {
 /// This enum represents the errors that might be encountered.
 #[derive(Debug)]
 pub enum RequestError {
-    ParseError(String),
-    JsonObjError(serde_json::Error),
     JsonStrError(serde_json::Error),
     StrCopyError(std::string::FromUtf8Error),
 }
