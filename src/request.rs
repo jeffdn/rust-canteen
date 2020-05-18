@@ -23,8 +23,6 @@ pub enum Method {
 /// This enum represents the errors that might be encountered.
 #[derive(Debug)]
 pub enum RequestError {
-    ParseError(String),
-    JsonObjError(serde_json::Error),
     JsonStrError(serde_json::Error),
     StrCopyError(std::string::FromUtf8Error),
 }
@@ -38,6 +36,24 @@ impl From<serde_json::Error> for RequestError {
 impl From<std::string::FromUtf8Error> for RequestError {
     fn from(err: std::string::FromUtf8Error) -> RequestError {
         RequestError::StrCopyError(err)
+    }
+}
+
+impl std::fmt::Display for RequestError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            RequestError::JsonStrError(err) => write!(f, "JSON error: {}", err),
+            RequestError::StrCopyError(err) => write!(f, "UTF-8 error: {}", err),
+        }
+    }
+}
+
+impl std::error::Error for RequestError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            RequestError::JsonStrError(err) => Some(err),
+            RequestError::StrCopyError(err) => Some(err),
+        }
     }
 }
 
