@@ -10,6 +10,8 @@ use std::collections::HashMap;
 use serde_json;
 use serde::de::DeserializeOwned;
 
+use crate::utils::replace_escape;
+
 /// This enum represents the various types of HTTP requests.
 #[derive(PartialEq, Eq, Hash, Debug, Copy, Clone)]
 pub enum Method {
@@ -19,6 +21,13 @@ pub enum Method {
     Delete,
     Options,
     NoImpl,
+}
+
+/// Storage for URI query parameters -- either single or multiple.
+#[derive(PartialEq, Eq, Hash, Debug, Clone)]
+pub enum QueryArg {
+    Single(String),
+    Multiple(Vec<String>),
 }
 
 /// This enum represents the errors that might be encountered.
@@ -92,9 +101,12 @@ impl FromUri for f32 {
 #[derive(Debug)]
 pub struct Request {
     pub method:  Method,
+    pub uri:     String,
     pub path:    String,
+    pub query:   String,
     pub payload: Vec<u8>,
     pub params:  HashMap<String, String>,
+    pub args:    HashMap<String, QueryArg>,
     headers:     HashMap<String, String>,
 }
 
@@ -103,9 +115,12 @@ impl Request {
     pub fn new() -> Request {
         Request {
             method:  Method::NoImpl,
+            uri:     String::new(),
             path:    String::new(),
+            query:   String::new(),
             headers: HashMap::new(),
             params:  HashMap::new(),
+            args:    HashMap::new(),
             payload: Vec::with_capacity(2048),
         }
     }
@@ -226,7 +241,35 @@ impl Request {
             "OPTIONS"       => Method::Options,
             _               => Method::NoImpl,
         };
-        self.path = String::from(ask[1]);
+
+        self.uri = String::from(ask[1]);
+
+        // Fetch any ?foo=bar&baz=quux query parameters.
+        let mut split_uri = ask[1].splitn(2, '?');
+        self.path = String::from(split_uri.next().unwrap());
+        self.query = String::from(split_uri.next().unwrap_or(""));
+
+        let mut tmp_query_args: HashMap<String, Vec<String>> = HashMap::new();
+
+        for pair in self.query.clone().split('&') {
+            let mut split_pair = pair.splitn(2, '=');
+
+            let key = String::from(replace_escape(split_pair.next().unwrap()));
+            let val = String::from(replace_escape(split_pair.next().unwrap_or("")));
+
+            if val.len() > 0 {
+                let key_entry = tmp_query_args.entry(key).or_insert(Vec::new());
+                key_entry.push(val);
+            }
+        }
+
+        for (key, mut vals) in tmp_query_args.into_iter() {
+            match vals.len() {
+                0 => continue,
+                1 => self.args.insert(key, QueryArg::Single(vals.pop().unwrap())),
+                _ => self.args.insert(key, QueryArg::Multiple(vals)),
+            };
+        }
 
         loop {
             buf = buf[1].splitn(2, "\r\n").collect();
@@ -269,6 +312,7 @@ impl std::str::FromStr for Request {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
     use super::*;
 
     #[derive(Deserialize)]
@@ -339,5 +383,13 @@ mod tests {
         let data: Foo = req.get_json_obj().unwrap();
 
         assert_eq!(123, data.item);
+    }
+
+    #[test]
+    fn test_parse() {
+        let req = Request::from_str("GET /item?foo=bar&baz=%6C%6F%6C HTTP/1.1\r\n\r\n").unwrap();
+
+        assert_eq!(req.args.get("foo").unwrap(), &QueryArg::Single("bar".into()));
+        assert_eq!(req.args.get("baz").unwrap(), &QueryArg::Single("lol".into()));
     }
 }
