@@ -17,6 +17,7 @@ pub enum Method {
     Put,
     Post,
     Delete,
+    Options,
     NoImpl,
 }
 
@@ -222,6 +223,7 @@ impl Request {
             "PUT" | "PATCH" => Method::Put,
             "POST"          => Method::Post,
             "DELETE"        => Method::Delete,
+            "OPTIONS"       => Method::Options,
             _               => Method::NoImpl,
         };
         self.path = String::from(ask[1]);
