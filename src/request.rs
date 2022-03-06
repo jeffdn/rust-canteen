@@ -128,7 +128,7 @@ impl Request {
     /// }
     /// ```
     pub fn get_header(&self, name: &str) -> Option<String> {
-        let key = String::from(name);
+        let key = String::from(name.to_lowercase());
 
         match self.headers.get(&key) {
             Some(val)   => Some(val.clone()),
@@ -242,7 +242,7 @@ impl Request {
             let hdr: Vec<&str> = buf[0].splitn(2, ": ").collect();
 
             if hdr.len() == 2 {
-                self.headers.insert(String::from(hdr[0]), String::from(hdr[1]));
+                self.headers.insert(String::from(hdr[0].to_lowercase()), String::from(hdr[1]));
             }
         }
     }
